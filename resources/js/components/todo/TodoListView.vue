@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, provide, ref, watch } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
+import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
 import InlineAdd from '@/components/todo/InlineAdd.vue';
 import ListFilters from '@/components/todo/ListFilters.vue';
 import SortModeSelect from '@/components/todo/SortModeSelect.vue';
@@ -100,7 +101,6 @@ const sortedActive = computed(() => {
 const visibleTodoIds = computed(() => sortedActive.value.map((t) => t.id));
 const isManual = computed(() => props.list.sort_mode === 'manual');
 
-// Local mirror used by the draggable for manual mode.
 const manualOrder = ref<Todo[]>([]);
 watch(
     sortedActive,
@@ -119,6 +119,29 @@ function onDragEnd() {
         { preserveScroll: true, preserveState: true },
     );
 }
+
+// Global expand/collapse state for sub-todos, persisted per list in localStorage
+const subsGlobal = ref<'all' | 'none' | null>(null);
+const subsKey = computed(() => `tododeloo:subs:${props.list.id}`);
+provide('subsGlobal', subsGlobal);
+
+onMounted(() => {
+    const stored = localStorage.getItem(subsKey.value);
+    if (stored === 'all' || stored === 'none') {
+        subsGlobal.value = stored;
+    }
+});
+
+const anyHasSubs = computed(() =>
+    props.todos.some((t) => (t.sub_todos ?? []).length > 0),
+);
+const allSubsExpanded = computed(() => subsGlobal.value === 'all');
+
+function toggleAllSubs() {
+    const next = allSubsExpanded.value ? 'none' : 'all';
+    subsGlobal.value = next;
+    localStorage.setItem(subsKey.value, next);
+}
 </script>
 
 <template>
@@ -128,23 +151,51 @@ function onDragEnd() {
             v-model:tag-ids="filterTagIds"
         />
         <div
-            class="flex items-center justify-between border-b border-border/60 pb-2 pt-3 font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+            class="flex items-center justify-between border-b border-border/60 pt-3 pb-2 font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
         >
             <span
-                >{{ activeTodos.length }} open · {{ doneTodos.length }} done</span
+                >{{ activeTodos.length }} open ·
+                {{ doneTodos.length }} done</span
             >
-            <SortModeSelect :list="list" :visible-todo-ids="visibleTodoIds" />
+            <div class="flex items-center gap-3">
+                <button
+                    v-if="anyHasSubs"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[10px] tracking-widest text-muted-foreground uppercase hover:bg-secondary hover:text-foreground"
+                    :aria-label="
+                        allSubsExpanded
+                            ? 'Klap alle subtaken in'
+                            : 'Klap alle subtaken uit'
+                    "
+                    @click="toggleAllSubs"
+                >
+                    <component
+                        :is="
+                            allSubsExpanded ? ChevronsDownUp : ChevronsUpDown
+                        "
+                        class="size-3"
+                    />
+                    <span>{{ allSubsExpanded ? 'subs ✕' : 'subs ✚' }}</span>
+                </button>
+                <SortModeSelect
+                    :list="list"
+                    :visible-todo-ids="visibleTodoIds"
+                />
+            </div>
         </div>
 
         <VueDraggable
             v-if="isManual"
             v-model="manualOrder"
             :animation="180"
-            filter="button, input, a, [contenteditable], label, select"
+            filter="input, a, [contenteditable], label, select"
+            handle=".drag-handle"
             :prevent-on-filter="false"
-            ghost-class="opacity-30"
-            chosen-class="bg-secondary/40"
-            drag-class="shadow-lg ring-2 ring-accent/40"
+            :force-fallback="true"
+            :fallback-on-body="true"
+            ghost-class="todo-ghost"
+            chosen-class="todo-chosen"
+            drag-class="todo-dragging"
             @end="onDragEnd"
         >
             <TodoItem

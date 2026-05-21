@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, inject, ref, watch, type Ref } from 'vue';
 import { ChevronDown, GripVertical, Trash2, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import PriorityDot from '@/components/todo/PriorityDot.vue';
+import SubProgressRing from '@/components/todo/SubProgressRing.vue';
 import SubTodoList from '@/components/todo/SubTodoList.vue';
 import SubTodoModal from '@/components/todo/SubTodoModal.vue';
 import TagChip from '@/components/todo/TagChip.vue';
@@ -29,8 +30,17 @@ const subDone = computed(
 const editing = ref(false);
 const editTitle = ref(props.todo.title);
 const tagsOpen = ref(false);
-const expanded = ref(false);
 const subModalOpen = ref(false);
+
+const subsGlobal = inject<Ref<'all' | 'none' | null>>(
+    'subsGlobal',
+    ref(null),
+);
+const expanded = ref(subsGlobal.value === 'all' && hasSubs.value);
+watch(subsGlobal, (v) => {
+    if (v === 'all' && hasSubs.value) expanded.value = true;
+    if (v === 'none') expanded.value = false;
+});
 
 const otherMemberships = computed(() =>
     (props.todo.list_memberships ?? []).filter((m) => m.id !== props.list.id),
@@ -38,7 +48,7 @@ const otherMemberships = computed(() =>
 
 function checkboxClick() {
     if (hasSubs.value) {
-        expanded.value = true;
+        expanded.value = !expanded.value;
         return;
     }
     toggleCompleted();
@@ -110,29 +120,46 @@ function softDelete() {
 </script>
 
 <template>
-    <TodoContextMenu
-        :todo="todo"
-        :list="list"
-        @edit="startEdit"
-        @open-tags="tagsOpen = true"
-        @add-subtodo="subModalOpen = true"
-    >
-        <div class="border-b border-border/60">
+    <div class="border-b border-border/60" :data-todo-id="todo.id">
+        <TodoContextMenu
+            :todo="todo"
+            :list="list"
+            @edit="startEdit"
+            @open-tags="tagsOpen = true"
+            @add-subtodo="subModalOpen = true"
+        >
             <div
                 class="group flex items-center gap-2 py-2.5 transition-colors hover:bg-card/40"
-                :class="[
-                    completed && 'opacity-60',
-                    draggable && 'cursor-grab active:cursor-grabbing',
-                ]"
+                :class="[completed && !hasSubs && 'opacity-60']"
             >
-                <span
+                <button
                     v-if="draggable"
-                    class="text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/70"
-                    aria-hidden="true"
+                    type="button"
+                    tabindex="-1"
+                    class="drag-handle -ml-1 cursor-grab rounded p-0.5 text-muted-foreground/30 opacity-0 transition-all group-hover:opacity-100 hover:bg-secondary hover:text-foreground active:cursor-grabbing"
+                    aria-label="Sleep om te verplaatsen"
                 >
                     <GripVertical class="size-4" />
-                </span>
+                </button>
+
                 <button
+                    v-if="hasSubs"
+                    type="button"
+                    class="grid size-5 shrink-0 place-items-center rounded-full transition-transform hover:scale-110"
+                    :aria-label="
+                        expanded ? 'Verberg subtaken' : 'Toon subtaken'
+                    "
+                    @click="checkboxClick"
+                >
+                    <SubProgressRing
+                        :done="subDone"
+                        :total="subs.length"
+                        :size="18"
+                        with-check
+                    />
+                </button>
+                <button
+                    v-else
                     type="button"
                     class="relative grid size-5 shrink-0 place-items-center rounded-full border border-input transition-colors"
                     :class="
@@ -141,11 +168,7 @@ function softDelete() {
                             : 'hover:border-accent'
                     "
                     :aria-label="
-                        hasSubs
-                            ? 'Open subtaken'
-                            : completed
-                              ? 'Markeer als open'
-                              : 'Markeer als done'
+                        completed ? 'Markeer als open' : 'Markeer als done'
                     "
                     @click="checkboxClick"
                 >
@@ -203,13 +226,28 @@ function softDelete() {
                 <button
                     v-if="hasSubs"
                     type="button"
-                    class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[10px] tracking-widest text-muted-foreground uppercase hover:bg-secondary hover:text-foreground"
-                    :aria-label="expanded ? 'Verberg subtaken' : 'Toon subtaken'"
+                    class="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors hover:bg-secondary"
+                    :aria-label="
+                        expanded ? 'Verberg subtaken' : 'Toon subtaken'
+                    "
                     @click="toggleExpand"
                 >
-                    <span>{{ subDone }}/{{ subs.length }}</span>
+                    <span
+                        class="font-mono text-[10px] leading-none tracking-wider tabular-nums"
+                    >
+                        <span
+                            :class="
+                                subDone > 0
+                                    ? 'font-semibold text-accent'
+                                    : 'text-muted-foreground'
+                            "
+                            >{{ subDone }}</span
+                        ><span class="text-muted-foreground/50"
+                            >/{{ subs.length }}</span
+                        >
+                    </span>
                     <ChevronDown
-                        class="size-3 transition-transform"
+                        class="size-3 text-muted-foreground/60 transition-transform"
                         :class="expanded && 'rotate-180'"
                     />
                 </button>
@@ -267,12 +305,12 @@ function softDelete() {
             </div>
 
             <SubTodoList v-if="expanded" :todo="todo" />
-        </div>
-    </TodoContextMenu>
+        </TodoContextMenu>
 
-    <SubTodoModal
-        :todo="todo"
-        :open="subModalOpen"
-        @update:open="subModalOpen = $event"
-    />
+        <SubTodoModal
+            :todo="todo"
+            :open="subModalOpen"
+            @update:open="subModalOpen = $event"
+        />
+    </div>
 </template>

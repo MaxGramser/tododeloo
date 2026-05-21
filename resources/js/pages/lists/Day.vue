@@ -170,102 +170,21 @@ const previousLabel = computed(() => {
     <div v-if="needsRitual" class="flex flex-col gap-10 px-6 pb-32 sm:px-10">
         <section class="pt-8">
             <header class="mb-3 flex items-center justify-between">
-                <h2 class="text-xl font-bold tracking-tight">
-                    Ochtendritueel
-                </h2>
-                <span
-                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                <h2
+                    class="flex items-center gap-2 text-xl font-bold tracking-tight"
                 >
-                    stap 1 · meenemen
-                </span>
-            </header>
-            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
-                Niet-done todos van {{ previousLabel }}. Vink aan wat je
-                vandaag wil oppakken.
-            </p>
-            <div
-                v-if="carryOverCandidates.length === 0"
-                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
-            >
-                Niets om mee te nemen — vorige werkdag was schoon afgesloten.
-            </div>
-            <ul v-else class="divide-y divide-border/60 border-y border-border/60">
-                <li
-                    v-for="todo in carryOverCandidates"
-                    :key="`carry-${todo.id}`"
-                    class="flex items-center gap-3 py-2.5"
-                >
-                    <input
-                        :id="`carry-${todo.id}`"
-                        type="checkbox"
-                        class="size-4 cursor-pointer rounded border-input accent-accent"
-                        :checked="selectedCarry.has(todo.id)"
-                        @change="toggleCarry(todo.id)"
-                    />
-                    <label
-                        :for="`carry-${todo.id}`"
-                        class="flex-1 cursor-pointer text-sm"
-                    >
-                        {{ todo.title }}
-                    </label>
-                </li>
-            </ul>
-        </section>
-
-        <section>
-            <header class="mb-3 flex items-center justify-between">
-                <h2 class="text-xl font-bold tracking-tight flex items-center gap-2">
-                    <Inbox class="size-5" /> Uit master
-                </h2>
-                <span
-                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
-                >
-                    stap 2 · plannen
-                </span>
-            </header>
-            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
-                Kies items uit je master lijst die je vandaag wil doen.
-            </p>
-            <div
-                v-if="masterOpenTodos.length === 0"
-                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
-            >
-                Master is leeg. Voeg hieronder iets toe.
-            </div>
-            <ul v-else class="divide-y divide-border/60 border-y border-border/60">
-                <li
-                    v-for="todo in masterOpenTodos"
-                    :key="`master-${todo.id}`"
-                    class="flex items-center gap-3 py-2.5"
-                >
-                    <input
-                        :id="`master-${todo.id}`"
-                        type="checkbox"
-                        class="size-4 cursor-pointer rounded border-input accent-accent"
-                        :checked="selectedFromMaster.has(todo.id)"
-                        @change="toggleMaster(todo.id)"
-                    />
-                    <label
-                        :for="`master-${todo.id}`"
-                        class="flex-1 cursor-pointer text-sm"
-                    >
-                        {{ todo.title }}
-                    </label>
-                </li>
-            </ul>
-        </section>
-
-        <section>
-            <header class="mb-3 flex items-center justify-between">
-                <h2 class="text-xl font-bold tracking-tight flex items-center gap-2">
                     <Plus class="size-5" /> Nieuw vandaag
                 </h2>
                 <span
                     class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                 >
-                    stap 3 · nieuw
+                    stap 1 · intentie
                 </span>
             </header>
+            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
+                Waar gaat vandaag eigenlijk over? Type wat nieuw is — wordt
+                ook in master gezet.
+            </p>
             <form
                 class="flex items-center gap-2 border-y border-border/60 py-2"
                 @submit.prevent="addNewTodo"
@@ -298,6 +217,101 @@ const previousLabel = computed(() => {
                     >
                         verwijder
                     </button>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <header class="mb-3 flex items-center justify-between">
+                <h2 class="text-xl font-bold tracking-tight">
+                    Van {{ previousLabel }}
+                </h2>
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                >
+                    stap 2 · meenemen
+                </span>
+            </header>
+            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
+                Niet-afgemaakte todos van vorige werkdag. Vink aan wat je
+                vandaag wil oppakken.
+            </p>
+            <div
+                v-if="carryOverCandidates.length === 0"
+                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
+            >
+                Niets om mee te nemen — vorige werkdag was schoon afgesloten.
+            </div>
+            <ul
+                v-else
+                class="divide-y divide-border/60 border-y border-border/60"
+            >
+                <li
+                    v-for="todo in carryOverCandidates"
+                    :key="`carry-${todo.id}`"
+                    class="flex items-center gap-3 py-2.5"
+                >
+                    <input
+                        :id="`carry-${todo.id}`"
+                        type="checkbox"
+                        class="size-4 cursor-pointer rounded border-input accent-accent"
+                        :checked="selectedCarry.has(todo.id)"
+                        @change="toggleCarry(todo.id)"
+                    />
+                    <label
+                        :for="`carry-${todo.id}`"
+                        class="flex-1 cursor-pointer text-sm"
+                    >
+                        {{ todo.title }}
+                    </label>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <header class="mb-3 flex items-center justify-between">
+                <h2
+                    class="flex items-center gap-2 text-xl font-bold tracking-tight"
+                >
+                    <Inbox class="size-5" /> Uit master
+                </h2>
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                >
+                    stap 3 · aanvullen
+                </span>
+            </header>
+            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
+                Wil je nog iets uit je master oppakken vandaag?
+            </p>
+            <div
+                v-if="masterOpenTodos.length === 0"
+                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
+            >
+                Master is leeg.
+            </div>
+            <ul
+                v-else
+                class="divide-y divide-border/60 border-y border-border/60"
+            >
+                <li
+                    v-for="todo in masterOpenTodos"
+                    :key="`master-${todo.id}`"
+                    class="flex items-center gap-3 py-2.5"
+                >
+                    <input
+                        :id="`master-${todo.id}`"
+                        type="checkbox"
+                        class="size-4 cursor-pointer rounded border-input accent-accent"
+                        :checked="selectedFromMaster.has(todo.id)"
+                        @change="toggleMaster(todo.id)"
+                    />
+                    <label
+                        :for="`master-${todo.id}`"
+                        class="flex-1 cursor-pointer text-sm"
+                    >
+                        {{ todo.title }}
+                    </label>
                 </li>
             </ul>
         </section>

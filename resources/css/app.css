@@ -196,4 +196,35 @@
             rgba(255, 255, 255, 0.18) 7px
         );
     }
+
+    /* Sortable drag states for todo lists */
+    .todo-ghost {
+        position: relative;
+    }
+    .todo-ghost > * {
+        opacity: 0;
+    }
+    .todo-ghost::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 2px;
+        border-radius: 9999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+    .todo-chosen {
+        opacity: 0.35;
+    }
+    .todo-dragging {
+        background: var(--card) !important;
+        border-radius: 0.5rem !important;
+        box-shadow:
+            0 12px 32px rgba(0, 0, 0, 0.18),
+            0 0 0 1px var(--border) !important;
+        cursor: grabbing;
+    }
 }
