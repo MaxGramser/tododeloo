@@ -7,6 +7,7 @@ import {
     Check,
     Copy,
     Inbox,
+    ListTree,
     Pencil,
     Plus,
     Sun,
@@ -37,8 +38,14 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'edit'): void;
     (e: 'open-tags'): void;
-    (e: 'pick-date'): void;
+    (e: 'add-subtodo'): void;
 }>();
+
+function onCustomDate(e: Event) {
+    const value = (e.target as HTMLInputElement).value;
+    if (!value) return;
+    moveTo(value);
+}
 
 const page = usePage<{
     sidebarLists: SidebarLists | null;
@@ -170,6 +177,11 @@ function nextWorkdayISO(): string {
                 <ContextMenuShortcut>⏎</ContextMenuShortcut>
             </ContextMenuItem>
 
+            <ContextMenuItem @click="emit('add-subtodo')">
+                <ListTree />
+                <span>Voeg subtodo toe</span>
+            </ContextMenuItem>
+
             <ContextMenuSub>
                 <ContextMenuSubTrigger>
                     <span
@@ -247,10 +259,26 @@ function nextWorkdayISO(): string {
                         <span>Volgende werkdag</span>
                     </ContextMenuItem>
                     <ContextMenuSeparator />
-                    <ContextMenuItem @click="emit('pick-date')">
-                        <CalendarPlus />
-                        <span>Specifieke datum…</span>
-                    </ContextMenuItem>
+                    <ContextMenuSub>
+                        <ContextMenuSubTrigger>
+                            <CalendarPlus />
+                            <span>Specifieke datum…</span>
+                        </ContextMenuSubTrigger>
+                        <ContextMenuSubContent class="p-3">
+                            <div class="flex flex-col gap-2">
+                                <label
+                                    class="font-mono text-[10px] tracking-widest text-muted-foreground/70 uppercase"
+                                    >Kies datum</label
+                                >
+                                <input
+                                    type="date"
+                                    :min="todayISO"
+                                    class="rounded-md border border-input bg-background px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-ring"
+                                    @change="onCustomDate"
+                                />
+                            </div>
+                        </ContextMenuSubContent>
+                    </ContextMenuSub>
                 </ContextMenuSubContent>
             </ContextMenuSub>
 

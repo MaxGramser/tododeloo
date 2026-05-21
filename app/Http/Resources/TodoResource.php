@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ListType;
 use App\Models\Todo;
+use App\Models\TodoList;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,6 +28,49 @@ class TodoResource extends JsonResource
             'created_at' => $this->created_at?->toIso8601String(),
             'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve()),
             'position' => $this->whenPivotLoaded('list_items', fn () => $this->pivot->position),
+            'list_memberships' => $this->whenLoaded('lists', fn () => $this->lists
+                ->filter(fn (TodoList $l) => $l->type !== ListType::Master)
+                ->map(fn (TodoList $l) => [
+                    'id' => $l->id,
+                    'type' => $l->type->value,
+                    'label' => self::labelFor($l),
+                ])
+                ->values()
+                ->all()),
+            'sub_todos' => $this->whenLoaded('subTodos', fn () => $this->subTodos
+                ->map(fn ($s) => [
+                    'id' => $s->id,
+                    'title' => $s->title,
+                    'completed_at' => $s->completed_at?->toIso8601String(),
+                    'position' => $s->position,
+                ])
+                ->all()),
         ];
+    }
+
+    private static function labelFor(TodoList $list): string
+    {
+        if ($list->type === ListType::Custom) {
+            return $list->name ?? 'lijst';
+        }
+
+        if ($list->date === null) {
+            return '';
+        }
+
+        $today = CarbonImmutable::today();
+        $date = CarbonImmutable::instance($list->date);
+
+        if ($date->isSameDay($today)) {
+            return 'vandaag';
+        }
+        if ($date->isSameDay($today->addDay())) {
+            return 'morgen';
+        }
+        if ($date->isSameDay($today->subDay())) {
+            return 'gisteren';
+        }
+
+        return $date->translatedFormat('d M');
     }
 }

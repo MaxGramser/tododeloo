@@ -29,7 +29,7 @@ class CustomListController extends Controller
         abort_unless($list->type === ListType::Custom, 404);
 
         return Inertia::render('lists/Custom', [
-            'list' => TodoListResource::make($list->load('todos.tags'))->resolve(),
+            'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos']))->resolve(),
         ]);
     }
 

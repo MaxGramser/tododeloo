@@ -8,6 +8,19 @@ export type Tag = {
     color: string | null;
 };
 
+export type ListMembership = {
+    id: number;
+    type: ListType;
+    label: string;
+};
+
+export type SubTodo = {
+    id: number;
+    title: string;
+    completed_at: string | null;
+    position: number;
+};
+
 export type Todo = {
     id: number;
     title: string;
@@ -17,6 +30,8 @@ export type Todo = {
     created_at: string;
     tags: Tag[];
     position?: number;
+    list_memberships?: ListMembership[];
+    sub_todos?: SubTodo[];
 };
 
 export type TodoList = {

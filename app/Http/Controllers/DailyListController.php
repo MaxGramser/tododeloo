@@ -43,7 +43,7 @@ class DailyListController extends Controller
         $list = $user->lists()
             ->where('type', ListType::Daily)
             ->whereDate('date', $date)
-            ->with('todos.tags')
+            ->with(['todos.tags', 'todos.lists', 'todos.subTodos'])
             ->first();
 
         $previousWorkday = Workday::lastWorkdayBefore($date);
@@ -58,7 +58,7 @@ class DailyListController extends Controller
         }
 
         $needsRitual = $list === null;
-        $resolvedList = $list ? TodoListResource::make($list->load('todos.tags'))->resolve() : null;
+        $resolvedList = $list ? TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos']))->resolve() : null;
 
         return Inertia::render('lists/Day', [
             'date' => $date->toDateString(),
