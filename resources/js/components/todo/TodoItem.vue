@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import { GripVertical, Tag as TagIcon, Trash2, X } from 'lucide-vue-next';
+import { computed, nextTick, ref } from 'vue';
+import { GripVertical, Trash2, X } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 import PriorityDot from '@/components/todo/PriorityDot.vue';
 import TagChip from '@/components/todo/TagChip.vue';
 import TagPicker from '@/components/todo/TagPicker.vue';
+import TodoContextMenu from '@/components/todo/TodoContextMenu.vue';
 import type { Todo, TodoList } from '@/types';
 
 const props = defineProps<{
@@ -20,16 +21,13 @@ const isMaster = computed(() => props.list.type === 'master');
 const editing = ref(false);
 const editTitle = ref(props.todo.title);
 const tagsOpen = ref(false);
+const dateInputRef = ref<HTMLInputElement | null>(null);
 
 function toggleCompleted() {
     const url = completed.value
         ? `/todos/${props.todo.id}/uncomplete`
         : `/todos/${props.todo.id}/complete`;
-    router.post(
-        url,
-        {},
-        { preserveScroll: true, preserveState: true },
-    );
+    router.post(url, {}, { preserveScroll: true, preserveState: true });
 }
 
 function startEdit() {
@@ -84,120 +82,161 @@ function softDelete() {
         },
     });
 }
+
+function pickDate() {
+    nextTick(() => {
+        const input = dateInputRef.value;
+        if (!input) return;
+        // showPicker is the modern API; fall back to click for older browsers
+        if (typeof (input as HTMLInputElement & { showPicker?: () => void }).showPicker === 'function') {
+            (input as HTMLInputElement & { showPicker: () => void }).showPicker();
+        } else {
+            input.click();
+        }
+    });
+}
+
+function onDatePicked(e: Event) {
+    const value = (e.target as HTMLInputElement).value;
+    if (!value) return;
+    router.post(
+        `/todos/${props.todo.id}/move-to-date`,
+        {
+            date: value,
+            from_list_id: props.list.type === 'daily' ? props.list.id : null,
+        },
+        { preserveScroll: true, preserveState: true },
+    );
+}
 </script>
 
 <template>
-    <div
-        class="group flex items-center gap-2 border-b border-border/60 py-2.5 transition-colors hover:bg-card/40"
-        :class="[completed && 'opacity-60', draggable && 'cursor-grab active:cursor-grabbing']"
+    <TodoContextMenu
+        :todo="todo"
+        :list="list"
+        @edit="startEdit"
+        @open-tags="tagsOpen = true"
+        @pick-date="pickDate"
     >
-        <span
-            v-if="draggable"
-            class="text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/70"
-            aria-hidden="true"
+        <div
+            class="group flex items-center gap-2 border-b border-border/60 py-2.5 transition-colors hover:bg-card/40"
+            :class="[
+                completed && 'opacity-60',
+                draggable && 'cursor-grab active:cursor-grabbing',
+            ]"
         >
-            <GripVertical class="size-4" />
-        </span>
-        <button
-            type="button"
-            class="relative grid size-5 shrink-0 place-items-center rounded-full border border-input transition-colors"
-            :class="
-                completed
-                    ? 'border-accent bg-accent text-accent-foreground'
-                    : 'hover:border-accent'
-            "
-            :aria-label="completed ? 'Markeer als open' : 'Markeer als done'"
-            @click="toggleCompleted"
-        >
-            <svg
-                v-if="completed"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                class="size-3"
+            <span
+                v-if="draggable"
+                class="text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/70"
+                aria-hidden="true"
             >
-                <path
-                    fill-rule="evenodd"
-                    d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
-                    clip-rule="evenodd"
-                />
-            </svg>
-        </button>
-
-        <PriorityDot
-            :priority="todo.priority"
-            :todo-id="todo.id"
-            interactive
-        />
-
-        <div class="min-w-0 flex-1">
-            <input
-                v-if="editing"
-                v-model="editTitle"
-                type="text"
-                class="w-full border-b border-input bg-transparent text-sm outline-none"
-                autofocus
-                @blur="commitEdit"
-                @keydown.enter.prevent="commitEdit"
-                @keydown.escape="
-                    () => {
-                        editing = false;
-                        editTitle = props.todo.title;
-                    }
+                <GripVertical class="size-4" />
+            </span>
+            <button
+                type="button"
+                class="relative grid size-5 shrink-0 place-items-center rounded-full border border-input transition-colors"
+                :class="
+                    completed
+                        ? 'border-accent bg-accent text-accent-foreground'
+                        : 'hover:border-accent'
                 "
-            />
-            <button
-                v-else
-                type="button"
-                class="block w-full text-left text-sm leading-snug truncate"
-                :class="completed && 'line-through decoration-muted-foreground/60'"
-                @click="startEdit"
+                :aria-label="
+                    completed ? 'Markeer als open' : 'Markeer als done'
+                "
+                @click="toggleCompleted"
             >
-                {{ todo.title }}
+                <svg
+                    v-if="completed"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="size-3"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
+                        clip-rule="evenodd"
+                    />
+                </svg>
             </button>
-        </div>
 
-        <div
-            v-if="todo.tags?.length"
-            class="hidden items-center gap-1 sm:flex"
-        >
-            <TagChip v-for="tag in todo.tags" :key="tag.id" :tag="tag" />
-        </div>
+            <PriorityDot
+                :priority="todo.priority"
+                :todo-id="todo.id"
+                interactive
+            />
 
-        <div
-            class="relative ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-            <button
-                type="button"
-                class="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                aria-label="Tags bewerken"
-                @click.stop="tagsOpen = !tagsOpen"
+            <div class="min-w-0 flex-1">
+                <input
+                    v-if="editing"
+                    v-model="editTitle"
+                    type="text"
+                    class="w-full border-b border-input bg-transparent text-sm outline-none"
+                    autofocus
+                    @blur="commitEdit"
+                    @keydown.enter.prevent="commitEdit"
+                    @keydown.escape="
+                        () => {
+                            editing = false;
+                            editTitle = props.todo.title;
+                        }
+                    "
+                />
+                <button
+                    v-else
+                    type="button"
+                    class="block w-full truncate text-left text-sm leading-snug"
+                    :class="
+                        completed && 'line-through decoration-muted-foreground/60'
+                    "
+                    @click="startEdit"
+                >
+                    {{ todo.title }}
+                </button>
+            </div>
+
+            <div
+                v-if="todo.tags?.length"
+                class="hidden items-center gap-1 sm:flex"
             >
-                <TagIcon class="size-3.5" />
-            </button>
-            <button
-                v-if="!isMaster"
-                type="button"
-                class="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                aria-label="Van lijst halen"
-                @click="removeFromList"
+                <TagChip v-for="tag in todo.tags" :key="tag.id" :tag="tag" />
+            </div>
+
+            <div
+                class="relative ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
             >
-                <X class="size-3.5" />
-            </button>
-            <button
-                type="button"
-                class="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                aria-label="Verwijderen"
-                @click="softDelete"
-            >
-                <Trash2 class="size-3.5" />
-            </button>
-            <TagPicker
-                v-if="tagsOpen"
-                :todo="todo"
-                :open="tagsOpen"
-                @update:open="tagsOpen = $event"
+                <button
+                    v-if="!isMaster"
+                    type="button"
+                    class="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    aria-label="Van lijst halen"
+                    @click="removeFromList"
+                >
+                    <X class="size-3.5" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    aria-label="Verwijderen"
+                    @click="softDelete"
+                >
+                    <Trash2 class="size-3.5" />
+                </button>
+                <TagPicker
+                    v-if="tagsOpen"
+                    :todo="todo"
+                    :open="tagsOpen"
+                    @update:open="tagsOpen = $event"
+                />
+            </div>
+
+            <input
+                ref="dateInputRef"
+                type="date"
+                class="pointer-events-none absolute opacity-0"
+                tabindex="-1"
+                @change="onDatePicked"
             />
         </div>
-    </div>
+    </TodoContextMenu>
 </template>

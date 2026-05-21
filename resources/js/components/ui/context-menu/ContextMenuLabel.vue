@@ -23,7 +23,7 @@ const forwardedProps = useForwardProps(delegatedProps);
         v-bind="forwardedProps"
         :class="
             cn(
-                'px-2 py-1 font-mono text-[10px] tracking-widest text-muted-foreground uppercase data-[inset]:pl-8',
+                'px-2 pt-1 pb-1.5 font-mono text-[10px] leading-none tracking-[0.18em] text-muted-foreground/70 uppercase data-[inset]:pl-8',
                 props.class,
             )
         "
