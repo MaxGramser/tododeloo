@@ -269,11 +269,16 @@ function softDelete() {
 
                 <span
                     v-if="todo.recurrence_id"
-                    class="hidden items-center text-muted-foreground/60 sm:flex"
-                    title="Herhalende taak"
-                    aria-label="Herhalende taak"
+                    class="hidden items-center gap-1 text-muted-foreground/60 sm:flex"
+                    :title="todo.recurrence?.summary ?? 'Herhalende taak'"
+                    :aria-label="todo.recurrence?.summary ?? 'Herhalende taak'"
                 >
-                    <Repeat class="size-3" />
+                    <Repeat class="size-3 shrink-0" />
+                    <span
+                        v-if="todo.recurrence?.summary"
+                        class="font-mono text-[10px] tracking-widest whitespace-nowrap uppercase"
+                        >{{ todo.recurrence.summary }}</span
+                    >
                 </span>
 
                 <div

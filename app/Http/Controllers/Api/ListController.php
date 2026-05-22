@@ -147,7 +147,7 @@ class ListController extends Controller
     private function resolveWithTodos(TodoList $list): array
     {
         return TodoListResource::make(
-            $list->load(['todos.tags', 'todos.lists', 'todos.subTodos']),
+            $list->load(['todos.tags', 'todos.lists', 'todos.subTodos', 'todos.recurrence']),
         )->resolve();
     }
 

@@ -6,6 +6,7 @@ use App\Actions\Todos\AddTodoToList;
 use App\Actions\Todos\CreateTodo;
 use App\Enums\ListType;
 use App\Enums\RecurrencePreset;
+use App\Http\Resources\TodoResource;
 use App\Models\Recurrence;
 use App\Models\Todo;
 use App\Models\User;
@@ -29,6 +30,44 @@ it('builds correct RRULEs from presets and an anchor date', function () {
         ->and($presets->rrule(RecurrencePreset::MonthlyNthWeekday, $thirdTuesday))->toBe('FREQ=MONTHLY;BYDAY=3TU')
         ->and($presets->rrule(RecurrencePreset::HalfYearly, $thirdTuesday))->toBe('FREQ=MONTHLY;INTERVAL=6')
         ->and($presets->rrule(RecurrencePreset::Yearly, $thirdTuesday))->toBe('FREQ=YEARLY');
+});
+
+it('describes preset rrules with their Dutch label and preset key', function () {
+    $presets = new RecurrencePresets;
+    $thirdTuesday = CarbonImmutable::parse('2026-05-19'); // 3rd Tuesday of May
+
+    expect($presets->describe('FREQ=DAILY', $thirdTuesday))->toBe(['preset' => 'daily', 'label' => 'Elke dag'])
+        ->and($presets->describe('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', $thirdTuesday))->toBe(['preset' => 'weekdays', 'label' => 'Elke werkdag'])
+        ->and($presets->describe('FREQ=WEEKLY;BYDAY=TU', $thirdTuesday))->toBe(['preset' => 'weekly', 'label' => 'Elke dinsdag'])
+        ->and($presets->describe('FREQ=MONTHLY;BYDAY=3TU', $thirdTuesday))->toBe(['preset' => 'monthly_nth_weekday', 'label' => 'Maandelijks op de 3e dinsdag'])
+        ->and($presets->describe('FREQ=MONTHLY;INTERVAL=6', $thirdTuesday))->toBe(['preset' => 'half_yearly', 'label' => 'Elk half jaar'])
+        ->and($presets->describe('FREQ=YEARLY', $thirdTuesday))->toBe(['preset' => 'yearly', 'label' => 'Elk jaar']);
+});
+
+it('describes custom rrules in readable Dutch with no preset', function () {
+    $presets = new RecurrencePresets;
+    $anchor = CarbonImmutable::parse('2026-05-19');
+
+    expect($presets->describe('FREQ=DAILY;INTERVAL=3', $anchor)['label'])->toBe('Elke 3 dagen')
+        ->and($presets->describe('FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH', $anchor)['label'])->toBe('Elke 2 weken op maandag en donderdag')
+        ->and($presets->describe('FREQ=WEEKLY;BYDAY=MO,WE,FR', $anchor)['label'])->toBe('Elke maandag, woensdag en vrijdag')
+        ->and($presets->describe('FREQ=MONTHLY;BYMONTHDAY=15', $anchor)['label'])->toBe('Maandelijks op de 15e')
+        ->and($presets->describe('FREQ=MONTHLY;BYDAY=-1FR', $anchor)['label'])->toBe('Maandelijks op de laatste vrijdag')
+        ->and($presets->describe('FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,TH', $anchor)['preset'])->toBeNull();
+});
+
+it('exposes a readable recurrence summary on the todo resource', function () {
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Standup']);
+
+    $this->post(route('todos.recurrence.store', $todo), [
+        'preset' => RecurrencePreset::Weekdays->value,
+        'anchor_date' => '2026-05-19',
+    ])->assertRedirect();
+
+    $resource = TodoResource::make($todo->fresh()->load('recurrence'))->resolve();
+
+    expect($resource['recurrence']['summary'])->toBe('Elke werkdag')
+        ->and($resource['recurrence']['preset'])->toBe('weekdays');
 });
 
 it('evaluates "3rd Tuesday of the month" correctly', function () {

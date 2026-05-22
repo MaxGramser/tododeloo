@@ -355,17 +355,28 @@ function nextWorkdayISO(): string {
                 <ContextMenuSubTrigger>
                     <Repeat />
                     <span>Herhaal</span>
-                    <ContextMenuShortcut v-if="isRecurring"
-                        >aan</ContextMenuShortcut
-                    >
+                    <ContextMenuShortcut v-if="isRecurring">{{
+                        todo.recurrence?.summary ?? 'aan'
+                    }}</ContextMenuShortcut>
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent>
+                    <template v-if="isRecurring">
+                        <ContextMenuLabel
+                            >Nu:
+                            {{ todo.recurrence?.summary }}</ContextMenuLabel
+                        >
+                        <ContextMenuSeparator />
+                    </template>
                     <ContextMenuItem
                         v-for="preset in recurrencePresets"
                         :key="preset.key"
                         @click="setRecurrence(preset.key)"
                     >
                         <span>{{ preset.label }}</span>
+                        <ContextMenuShortcut
+                            v-if="todo.recurrence?.preset === preset.key"
+                            >huidig</ContextMenuShortcut
+                        >
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem @click="emit('custom-recurrence')">

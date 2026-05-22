@@ -24,7 +24,7 @@ class QuickAddController extends Controller
         $result = $quickAdd($request->user(), $validated['title']);
 
         return [
-            'todo' => TodoResource::make($result['todo']->load(['tags', 'lists', 'subTodos']))->resolve(),
+            'todo' => TodoResource::make($result['todo']->load(['tags', 'lists', 'subTodos', 'recurrence']))->resolve(),
             'target_date' => $result['target_date']->toDateString(),
         ];
     }

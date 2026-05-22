@@ -49,7 +49,17 @@ struct TodoRow<MenuContent: View>: View {
                 if todo.priorityValue == .high {
                     MonoLabel("Hoog", color: Theme.accent)
                 }
-                if todo.isRecurring {
+                if let summary = todo.recurrence?.summary {
+                    HStack(spacing: 4) {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text(summary.uppercased())
+                            .font(.mono(11, weight: .semibold))
+                            .tracking(1.4)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(Theme.faint)
+                } else if todo.isRecurring {
                     Image(systemName: "repeat")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Theme.faint)
@@ -75,6 +85,7 @@ struct TodoMenu: View {
     let isToday: Bool
     let canRemoveFromList: Bool
     let recurrencePresets: [RecurrencePresetOption]
+    let lists: [ListSummary]
 
     let onOpen: () -> Void
     let onToggle: () -> Void
@@ -86,9 +97,32 @@ struct TodoMenu: View {
     let onSetRecurrence: (String) -> Void
     let onCustomRecurrence: () -> Void
     let onStopRecurrence: () -> Void
+    let onAddToList: (Int) -> Void
     let onDuplicate: () -> Void
     let onRemoveFromList: () -> Void
     let onDelete: () -> Void
+
+    private var recurrenceMenuTitle: String {
+        if let summary = todo.recurrence?.summary {
+            return "Herhaal · \(summary)"
+        }
+        return todo.isRecurring ? "Herhaal · aan" : "Herhaal"
+    }
+
+    @ViewBuilder
+    private var recurrencePresetButtons: some View {
+        ForEach(recurrencePresets) { preset in
+            Button {
+                onSetRecurrence(preset.key)
+            } label: {
+                if todo.recurrence?.preset == preset.key {
+                    Label(preset.label, systemImage: "checkmark")
+                } else {
+                    Text(preset.label)
+                }
+            }
+        }
+    }
 
     var body: some View {
         Button(action: onOpen) {
@@ -134,8 +168,12 @@ struct TodoMenu: View {
         }
 
         Menu {
-            ForEach(recurrencePresets) { preset in
-                Button(preset.label) { onSetRecurrence(preset.key) }
+            if let summary = todo.recurrence?.summary {
+                Section("Nu: \(summary)") {
+                    recurrencePresetButtons
+                }
+            } else {
+                recurrencePresetButtons
             }
             Divider()
             Button(action: onCustomRecurrence) {
@@ -148,7 +186,21 @@ struct TodoMenu: View {
                 }
             }
         } label: {
-            Label(todo.isRecurring ? "Herhaal · aan" : "Herhaal", systemImage: "repeat")
+            Label(recurrenceMenuTitle, systemImage: "repeat")
+        }
+
+        if !lists.isEmpty {
+            Menu {
+                ForEach(lists) { list in
+                    Button {
+                        onAddToList(list.id)
+                    } label: {
+                        Label(list.displayName, systemImage: "tray")
+                    }
+                }
+            } label: {
+                Label("Zet op lijst", systemImage: "tray.full")
+            }
         }
 
         Button(action: onDuplicate) {

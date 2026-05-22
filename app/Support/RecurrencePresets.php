@@ -58,6 +58,107 @@ class RecurrencePresets
         ], RecurrencePreset::cases());
     }
 
+    /**
+     * Describe a stored RRULE in Dutch. When the rule matches one of the presets
+     * (resolved against its anchor) the preset key is returned too, so clients can
+     * tick the active option. Custom rules fall back to a generated description.
+     *
+     * @return array{preset: ?string, label: string}
+     */
+    public function describe(string $rrule, CarbonInterface $anchor): array
+    {
+        foreach (RecurrencePreset::cases() as $preset) {
+            if ($this->rrule($preset, $anchor) === $rrule) {
+                return ['preset' => $preset->value, 'label' => $this->label($preset, $anchor)];
+            }
+        }
+
+        return ['preset' => null, 'label' => $this->describeCustom($rrule)];
+    }
+
+    /** Build a Dutch sentence for an arbitrary RRULE (the custom builder's output). */
+    private function describeCustom(string $rrule): string
+    {
+        $parts = [];
+
+        foreach (explode(';', $rrule) as $segment) {
+            [$key, $value] = array_pad(explode('=', $segment, 2), 2, '');
+            $parts[strtoupper($key)] = strtoupper($value);
+        }
+
+        $interval = isset($parts['INTERVAL']) ? max(1, (int) $parts['INTERVAL']) : 1;
+
+        return match ($parts['FREQ'] ?? '') {
+            'DAILY' => $interval === 1 ? 'Elke dag' : "Elke {$interval} dagen",
+            'WEEKLY' => $this->describeWeekly($interval, $parts['BYDAY'] ?? null),
+            'MONTHLY' => $this->describeMonthly($interval, $parts['BYDAY'] ?? null, $parts['BYMONTHDAY'] ?? null),
+            'YEARLY' => $interval === 1 ? 'Elk jaar' : "Elke {$interval} jaar",
+            default => 'Herhaalt',
+        };
+    }
+
+    private function describeWeekly(int $interval, ?string $byDay): string
+    {
+        if ($byDay === null || $byDay === '') {
+            return $interval === 1 ? 'Elke week' : "Elke {$interval} weken";
+        }
+
+        $codes = explode(',', $byDay);
+
+        if ($interval === 1 && $codes === ['MO', 'TU', 'WE', 'TH', 'FR']) {
+            return 'Elke werkdag';
+        }
+
+        $days = $this->joinDutch(array_map(fn (string $code): string => $this->labelForCode($code), $codes));
+
+        return $interval === 1 ? "Elke {$days}" : "Elke {$interval} weken op {$days}";
+    }
+
+    private function describeMonthly(int $interval, ?string $byDay, ?string $byMonthDay): string
+    {
+        if ($byDay !== null && $byDay !== '' && preg_match('/^(-?\d+)([A-Z]{2})$/', $byDay, $m)) {
+            $where = 'op de '.$this->ordinalFor((int) $m[1]).' '.$this->labelForCode($m[2]);
+
+            return $interval === 1 ? "Maandelijks {$where}" : "Elke {$interval} maanden {$where}";
+        }
+
+        if ($byMonthDay !== null && $byMonthDay !== '') {
+            $where = "op de {$byMonthDay}e";
+
+            return $interval === 1 ? "Maandelijks {$where}" : "Elke {$interval} maanden {$where}";
+        }
+
+        return match (true) {
+            $interval === 1 => 'Elke maand',
+            $interval === 6 => 'Elk half jaar',
+            default => "Elke {$interval} maanden",
+        };
+    }
+
+    private function labelForCode(string $code): string
+    {
+        $index = array_search($code, self::RRULE_DAY, true);
+
+        return $index === false ? strtolower($code) : self::DAY_LABEL[$index];
+    }
+
+    private function ordinalFor(int $n): string
+    {
+        return $n < 0 ? 'laatste' : (self::ORDINAL[$n] ?? "{$n}e");
+    }
+
+    /** "maandag", "maandag en donderdag", "maandag, woensdag en vrijdag". */
+    private function joinDutch(array $items): string
+    {
+        if (count($items) <= 1) {
+            return implode('', $items);
+        }
+
+        $last = array_pop($items);
+
+        return implode(', ', $items).' en '.$last;
+    }
+
     private function dayCode(CarbonInterface $anchor): string
     {
         return self::RRULE_DAY[$anchor->dayOfWeekIso - 1];

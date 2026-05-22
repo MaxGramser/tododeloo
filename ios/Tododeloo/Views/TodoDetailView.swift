@@ -119,9 +119,11 @@ struct TodoDetailView: View {
             MonoLabel("Tags")
             let attached = todo.tags ?? []
             if !attached.isEmpty {
-                FlowChips(tags: attached) { tag in
-                    toggleTag(tag)
-                }
+                FlowChips(
+                    tags: attached,
+                    onTap: { toggleTag($0) },
+                    onDelete: { deleteTag($0) }
+                )
             }
             HStack(spacing: 10) {
                 Menu {
@@ -260,6 +262,24 @@ struct TodoDetailView: View {
         }
     }
 
+    /// Delete a tag everywhere. The server detaches it from all todos; we drop it
+    /// from this todo's chips and the available list.
+    private func deleteTag(_ tag: Tag) {
+        Task {
+            do {
+                try await api.deleteTag(tag.id)
+                allTags.removeAll { $0.id == tag.id }
+                if (todo.tags ?? []).contains(where: { $0.id == tag.id }) {
+                    let remaining = (todo.tags ?? []).map(\.id).filter { $0 != tag.id }
+                    todo = try await api.syncTags(todo.id, tagIds: remaining)
+                }
+                await onChange()
+            } catch {
+                handle(error)
+            }
+        }
+    }
+
     private func addSub() {
         let title = newSubTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
@@ -328,10 +348,12 @@ struct TodoDetailView: View {
     }
 }
 
-/// Simple wrapping row of tappable tag chips.
+/// Simple wrapping row of tappable tag chips. Tap detaches the tag from the todo;
+/// press-and-hold offers deleting the tag everywhere.
 private struct FlowChips: View {
     let tags: [Tag]
     let onTap: (Tag) -> Void
+    let onDelete: (Tag) -> Void
 
     var body: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 8, alignment: .leading)], alignment: .leading, spacing: 8) {
@@ -347,6 +369,14 @@ private struct FlowChips: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .contextMenu {
+                    Button { onTap(tag) } label: {
+                        Label("Loskoppelen", systemImage: "minus.circle")
+                    }
+                    Button(role: .destructive) { onDelete(tag) } label: {
+                        Label("Verwijder tag overal", systemImage: "trash")
+                    }
+                }
             }
         }
     }

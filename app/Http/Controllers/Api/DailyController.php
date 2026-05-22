@@ -59,7 +59,7 @@ class DailyController extends Controller
         );
 
         return [
-            'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos']))->resolve(),
+            'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos', 'todos.recurrence']))->resolve(),
         ];
     }
 
@@ -78,7 +78,7 @@ class DailyController extends Controller
         $list = $user->lists()
             ->where('type', ListType::Daily)
             ->whereDate('date', $date)
-            ->with(['todos.tags', 'todos.lists', 'todos.subTodos'])
+            ->with(['todos.tags', 'todos.lists', 'todos.subTodos', 'todos.recurrence'])
             ->first();
 
         $needsRitual = $isToday && ($list === null || $list->started_at === null);

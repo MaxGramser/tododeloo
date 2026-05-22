@@ -136,6 +136,11 @@ final class APIClient {
         try await sendVoid(.delete, "todos/\(id)")
     }
 
+    func restore(_ id: Int) async throws -> Todo {
+        let response: TodoResponse = try await send(.post, "todos/\(id)/restore")
+        return response.todo
+    }
+
     func complete(_ id: Int) async throws -> Todo {
         let response: TodoResponse = try await send(.post, "todos/\(id)/complete")
         return response.todo

@@ -20,6 +20,21 @@ final class BoardModel {
     var listName: String = ""
     var dateString: String = ""
     var todos: [Todo] = []
+    var sortMode: SortMode = .manual
+
+    // Custom lists available as "add to list" targets (lazily fetched).
+    var customLists: [ListSummary] = []
+
+    // View-only filters applied client-side over the loaded todos.
+    var priorityFilter: Priority?
+    var tagFilter: Int?
+
+    // Which day the Today board is showing ("" == today). Lets the user page
+    // back and forth through daily lists without leaving the tab.
+    var viewingDate: String = ""
+
+    // Last todo deleted from this board, kept briefly so it can be restored.
+    var recentlyDeleted: Todo?
 
     // Today's morning ritual.
     var needsRitual = false
@@ -47,13 +62,60 @@ final class BoardModel {
 
     var title: String {
         switch context {
-        case .today: return "Vandaag"
+        case .today: return isViewingToday ? "Vandaag" : DateText.medium(effectiveDate)
         case .master: return "Alles"
         case .custom: return listName.isEmpty ? "Lijst" : listName
         }
     }
 
     var openCount: Int { todos.filter { !$0.isCompleted }.count }
+
+    // MARK: - Day navigation (Today board)
+
+    private var todayISO: String { RecurrencePresetOption.dayFormatter.string(from: Date()) }
+    var effectiveDate: String { viewingDate.isEmpty ? todayISO : viewingDate }
+    var isViewingToday: Bool { effectiveDate == todayISO }
+
+    func shiftDay(by days: Int) async {
+        guard let date = DateText.parse(effectiveDate) else { return }
+        let next = Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: date) ?? date
+        viewingDate = DateText.ymd(next)
+        await load()
+    }
+
+    func goToToday() async {
+        viewingDate = ""
+        await load()
+    }
+
+    // MARK: - Filtering (view-only)
+
+    var visibleTodos: [Todo] {
+        todos.filter { todo in
+            (priorityFilter == nil || todo.priorityValue == priorityFilter)
+                && (tagFilter == nil || (todo.tags ?? []).contains { $0.id == tagFilter })
+        }
+    }
+
+    var hasActiveFilter: Bool { priorityFilter != nil || tagFilter != nil }
+
+    /// Distinct tags present on the loaded todos, for the filter menu.
+    var availableTags: [Tag] {
+        var seen = Set<Int>()
+        var result: [Tag] = []
+        for todo in todos {
+            for tag in todo.tags ?? [] where !seen.contains(tag.id) {
+                seen.insert(tag.id)
+                result.append(tag)
+            }
+        }
+        return result.sorted { $0.name.lowercased() < $1.name.lowercased() }
+    }
+
+    func clearFilters() {
+        priorityFilter = nil
+        tagFilter = nil
+    }
 
     // MARK: - Loading
 
@@ -63,7 +125,7 @@ final class BoardModel {
         do {
             switch context {
             case .today:
-                let response = try await api.today()
+                let response = isViewingToday ? try await api.today() : try await api.day(effectiveDate)
                 dateString = response.date
                 needsRitual = response.needsRitual
                 if response.needsRitual {
@@ -82,6 +144,7 @@ final class BoardModel {
             case .custom(let id):
                 apply(try await api.list(id))
             }
+            customLists = (try? await api.lists())?.filter { !$0.isMaster } ?? customLists
             errorMessage = nil
         } catch {
             handle(error)
@@ -94,6 +157,7 @@ final class BoardModel {
         listType = list.type
         listName = list.displayName
         dateString = list.date ?? dateString
+        sortMode = SortMode(rawValue: list.sortMode) ?? .manual
         todos = sorted(list.todos ?? [])
     }
 
@@ -159,11 +223,66 @@ final class BoardModel {
 
     func delete(_ todo: Todo) async {
         todos.removeAll { $0.id == todo.id }
+        recentlyDeleted = todo
         do {
             try await api.deleteTodo(todo.id)
         } catch {
+            recentlyDeleted = nil
             handle(error)
             await load()
+        }
+    }
+
+    func undoDelete() async {
+        guard let todo = recentlyDeleted else { return }
+        recentlyDeleted = nil
+        do {
+            _ = try await api.restore(todo.id)
+            await load()
+        } catch {
+            handle(error)
+        }
+    }
+
+    func dismissUndo() {
+        recentlyDeleted = nil
+    }
+
+    // MARK: - Lists & ordering
+
+    var addableLists: [ListSummary] {
+        customLists.filter { $0.id != listId }
+    }
+
+    func addToList(_ todo: Todo, listId: Int) async {
+        do {
+            _ = try await api.addToList(todo.id, listId: listId)
+            await load()
+        } catch {
+            handle(error)
+        }
+    }
+
+    func setSortMode(_ mode: SortMode) async {
+        guard let listId else { return }
+        sortMode = mode
+        let visibleIds = mode == .manual ? todos.map(\.id) : nil
+        do {
+            apply(try await api.setSortMode(listId: listId, mode: mode.rawValue, visibleTodoIds: visibleIds))
+        } catch {
+            handle(error)
+        }
+    }
+
+    /// Persist a manual reorder. The given ids are the active todos in their new
+    /// order; completed ones keep their place at the end.
+    func persistOrder(activeOrderedIds: [Int]) async {
+        guard let listId else { return }
+        let completedIds = todos.filter(\.isCompleted).map(\.id)
+        do {
+            apply(try await api.reorder(listId: listId, todoIds: activeOrderedIds + completedIds))
+        } catch {
+            handle(error)
         }
     }
 

@@ -42,6 +42,15 @@ enum DateText {
         formatter.dateFormat = "EEEE d MMMM"
         return formatter.string(from: date)
     }
+
+    /// Short relative-friendly date for a header title, e.g. "Ma 25 mei".
+    static func medium(_ ymd: String) -> String {
+        guard let date = parse(ymd) else { return ymd }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "nl_NL")
+        formatter.dateFormat = "EEE d MMM"
+        return formatter.string(from: date).capitalized
+    }
 }
 
 /// The tappable completion circle. Tap toggles done; high-priority todos show

@@ -21,12 +21,6 @@ export type SubTodo = {
     position: number;
 };
 
-export type Recurrence = {
-    id: number;
-    rrule: string;
-    active: boolean;
-};
-
 export type RecurrencePreset =
     | 'daily'
     | 'weekdays'
@@ -34,6 +28,16 @@ export type RecurrencePreset =
     | 'monthly_nth_weekday'
     | 'half_yearly'
     | 'yearly';
+
+export type Recurrence = {
+    id: number;
+    rrule: string;
+    active: boolean;
+    /** Key of the matching preset, or null for a custom rule. */
+    preset: RecurrencePreset | null;
+    /** Readable Dutch description, e.g. "Elke werkdag". */
+    summary: string;
+};
 
 export type Todo = {
     id: number;

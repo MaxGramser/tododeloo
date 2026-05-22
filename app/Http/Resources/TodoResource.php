@@ -27,11 +27,21 @@ class TodoResource extends JsonResource
             'completed_at' => $this->completed_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'recurrence_id' => $this->recurrence_id,
-            'recurrence' => $this->whenLoaded('recurrence', fn () => $this->recurrence ? [
-                'id' => $this->recurrence->id,
-                'rrule' => $this->recurrence->rrule,
-                'active' => $this->recurrence->active,
-            ] : null),
+            'recurrence' => $this->whenLoaded('recurrence', function () {
+                if ($this->recurrence === null) {
+                    return null;
+                }
+
+                $described = $this->recurrence->describe();
+
+                return [
+                    'id' => $this->recurrence->id,
+                    'rrule' => $this->recurrence->rrule,
+                    'active' => $this->recurrence->active,
+                    'preset' => $described['preset'],
+                    'summary' => $described['label'],
+                ];
+            }),
             'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve()),
             'position' => $this->whenPivotLoaded('list_items', fn () => $this->pivot->position),
             'list_memberships' => $this->whenLoaded('lists', fn () => $this->lists

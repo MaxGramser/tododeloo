@@ -222,7 +222,7 @@ class TodoController extends Controller
     private function respondWith(Todo $todo): array
     {
         return [
-            'todo' => TodoResource::make($todo->load(['tags', 'lists', 'subTodos']))->resolve(),
+            'todo' => TodoResource::make($todo->load(['tags', 'lists', 'subTodos', 'recurrence']))->resolve(),
         ];
     }
 

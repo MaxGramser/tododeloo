@@ -73,7 +73,7 @@ class SubTodoController extends Controller
     private function respondWithParent(Todo $todo): array
     {
         return [
-            'todo' => TodoResource::make($todo->fresh()->load(['tags', 'lists', 'subTodos']))->resolve(),
+            'todo' => TodoResource::make($todo->fresh()->load(['tags', 'lists', 'subTodos', 'recurrence']))->resolve(),
         ];
     }
 

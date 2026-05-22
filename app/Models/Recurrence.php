@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Priority;
+use App\Support\RecurrencePresets;
 use App\Support\RecurrenceSchedule;
+use Carbon\CarbonImmutable;
 use Database\Factories\RecurrenceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,6 +45,17 @@ class Recurrence extends Model
     public function schedule(): RecurrenceSchedule
     {
         return new RecurrenceSchedule($this->rrule, $this->dtstart, $this->until);
+    }
+
+    /**
+     * Dutch description of the schedule plus the matching preset key (or null for
+     * a custom rule), for showing the user how this recurrence is set.
+     *
+     * @return array{preset: ?string, label: string}
+     */
+    public function describe(): array
+    {
+        return app(RecurrencePresets::class)->describe($this->rrule, CarbonImmutable::instance($this->dtstart));
     }
 
     public function scopeActive(Builder $query): void

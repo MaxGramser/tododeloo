@@ -107,6 +107,51 @@ struct CreateListSheet: View {
     }
 }
 
+/// Drag-to-reorder the active todos of a list. Saving sends the new order to the
+/// server (manual sort mode). Completed todos are not shown and keep their place.
+struct ReorderSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var items: [Todo]
+    let onSave: ([Int]) -> Void
+
+    init(items: [Todo], onSave: @escaping ([Int]) -> Void) {
+        _items = State(initialValue: items)
+        self.onSave = onSave
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(items) { todo in
+                    Text(todo.title)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                        .listRowBackground(Theme.surface)
+                }
+                .onMove { from, to in items.move(fromOffsets: from, toOffset: to) }
+            }
+            .listStyle(.plain)
+            .environment(\.editMode, .constant(.active))
+            .scrollContentBackground(.hidden)
+            .background(Theme.background)
+            .navigationTitle("Herorden")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Klaar") {
+                        onSave(items.map(\.id))
+                        dismiss()
+                    }
+                    .fontWeight(.bold)
+                    .tint(Theme.ink)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}
+
 /// Builds an arbitrary RFC 5545 RRULE (every N days/weeks/months/years, weekday
 /// picks, monthly-on-the-Nth-weekday). Anchored on the day the todo sits on.
 struct RecurrenceSheet: View {

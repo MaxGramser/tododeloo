@@ -73,6 +73,38 @@ struct Recurrence: Codable, Hashable, Identifiable {
     let id: Int
     let rrule: String
     let active: Bool
+    /// Key of the matching preset, or nil for a custom rule.
+    let preset: String?
+    /// Readable Dutch description, e.g. "Elke werkdag".
+    let summary: String
+}
+
+/// How a list orders its todos. Mirrors the server's sort_mode enum.
+enum SortMode: String, CaseIterable, Identifiable {
+    case manual
+    case createdAt = "created_at"
+    case alphabetical
+    case priority
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .manual: return "Handmatig"
+        case .createdAt: return "Nieuwste eerst"
+        case .alphabetical: return "Alfabetisch"
+        case .priority: return "Prioriteit"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .manual: return "hand.draw"
+        case .createdAt: return "clock"
+        case .alphabetical: return "textformat"
+        case .priority: return "flag"
+        }
+    }
 }
 
 /// A repeat option shown in the press-and-hold menu. Labels are derived from the

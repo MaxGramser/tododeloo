@@ -16,7 +16,7 @@ class MasterListController extends Controller
         $list = $ensureMasterList($user);
 
         return Inertia::render('lists/Master', [
-            'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos']))->resolve(),
+            'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos', 'todos.recurrence']))->resolve(),
         ]);
     }
 }
