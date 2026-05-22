@@ -25,6 +25,7 @@ final class BoardModel {
     var needsRitual = false
     var previousWorkday = ""
     var carryOverCandidates: [Todo] = []
+    var earlierCandidates: [Todo] = []
     var masterOpenTodos: [Todo] = []
     var preScheduled: [Todo] = []
 
@@ -68,6 +69,7 @@ final class BoardModel {
                 if response.needsRitual {
                     previousWorkday = response.previousWorkday
                     carryOverCandidates = response.carryOverCandidates
+                    earlierCandidates = response.earlierCandidates
                     masterOpenTodos = response.masterOpenTodos
                     preScheduled = response.preScheduled
                     listId = response.list?.id
@@ -227,6 +229,46 @@ final class BoardModel {
         guard !trimmed.isEmpty else { return }
         do {
             replace(try await api.createSubTodo(todoId: todo.id, title: trimmed))
+        } catch {
+            handle(error)
+        }
+    }
+
+    // MARK: - Recurrence
+
+    /// Anchor a new recurrence on the day being viewed; today for non-daily lists.
+    var recurrenceAnchorISO: String {
+        if listType == "daily", !dateString.isEmpty {
+            return dateString
+        }
+        return RecurrencePresetOption.dayFormatter.string(from: Date())
+    }
+
+    var recurrencePresets: [RecurrencePresetOption] {
+        RecurrencePresetOption.presets(anchorISO: recurrenceAnchorISO)
+    }
+
+    func setRecurrence(_ todo: Todo, preset: String) async {
+        do {
+            replace(try await api.setRecurrence(todo.id, preset: preset, anchorDate: recurrenceAnchorISO))
+        } catch {
+            handle(error)
+        }
+    }
+
+    func setCustomRecurrence(_ todo: Todo, rrule: String) async {
+        do {
+            replace(try await api.setRecurrence(todo.id, rrule: rrule, anchorDate: recurrenceAnchorISO))
+        } catch {
+            handle(error)
+        }
+    }
+
+    func stopRecurrence(_ todo: Todo) async {
+        guard let recurrenceId = todo.recurrenceId else { return }
+        do {
+            try await api.stopRecurrence(recurrenceId)
+            await load()
         } catch {
             handle(error)
         }

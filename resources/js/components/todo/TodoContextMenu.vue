@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import {
     CalendarDays,
     CalendarPlus,
@@ -10,11 +9,13 @@ import {
     ListTree,
     Pencil,
     Plus,
+    Repeat,
     Sun,
     Tag as TagIcon,
     Trash2,
     X,
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import {
     ContextMenu,
     ContextMenuCheckboxItem,
@@ -39,11 +40,16 @@ const emit = defineEmits<{
     (e: 'edit'): void;
     (e: 'open-tags'): void;
     (e: 'add-subtodo'): void;
+    (e: 'custom-recurrence'): void;
 }>();
 
 function onCustomDate(e: Event) {
     const value = (e.target as HTMLInputElement).value;
-    if (!value) return;
+
+    if (!value) {
+        return;
+    }
+
     moveTo(value);
 }
 
@@ -106,8 +112,13 @@ function setPriority(p: Priority) {
 
 function toggleTag(tag: Tag, checked: boolean) {
     const next = new Set(selectedTagIds.value);
-    if (checked) next.add(tag.id);
-    else next.delete(tag.id);
+
+    if (checked) {
+        next.add(tag.id);
+    } else {
+        next.delete(tag.id);
+    }
+
     patch(`/todos/${props.todo.id}/tags`, { tag_ids: [...next] });
 }
 
@@ -116,6 +127,57 @@ function moveTo(dateISO: string) {
         date: dateISO,
         from_list_id: isDaily.value ? props.list.id : null,
     });
+}
+
+// Recurrence presets are derived from the day this todo sits on, so "weekly"
+// and "monthly" mean "this weekday". The server builds the actual RRULE.
+const WEEKDAYS_NL = [
+    'zondag',
+    'maandag',
+    'dinsdag',
+    'woensdag',
+    'donderdag',
+    'vrijdag',
+    'zaterdag',
+];
+const ORDINALS_NL = ['', '1e', '2e', '3e', '4e'];
+
+const recurrenceAnchorISO = computed(() =>
+    isDaily.value && props.list.date ? props.list.date : todayISO.value,
+);
+
+const isRecurring = computed(() => props.todo.recurrence_id !== null);
+
+const recurrencePresets = computed(() => {
+    const d = new Date(recurrenceAnchorISO.value + 'T00:00:00');
+    const weekday = WEEKDAYS_NL[d.getDay()];
+    const nth = Math.ceil(d.getDate() / 7);
+    const nthLabel = nth >= 5 ? 'laatste' : ORDINALS_NL[nth];
+
+    return [
+        { key: 'daily', label: 'Elke dag' },
+        { key: 'weekdays', label: 'Elke werkdag' },
+        { key: 'weekly', label: `Elke ${weekday}` },
+        {
+            key: 'monthly_nth_weekday',
+            label: `Maandelijks · ${nthLabel} ${weekday}`,
+        },
+        { key: 'half_yearly', label: 'Elk half jaar' },
+        { key: 'yearly', label: 'Elk jaar' },
+    ];
+});
+
+function setRecurrence(preset: string) {
+    post(`/todos/${props.todo.id}/recurrence`, {
+        preset,
+        anchor_date: recurrenceAnchorISO.value,
+    });
+}
+
+function stopRecurrence() {
+    if (props.todo.recurrence_id) {
+        del(`/recurrences/${props.todo.recurrence_id}`);
+    }
 }
 
 function addToList(targetListId: number) {
@@ -143,6 +205,7 @@ function softDelete() {
 function isoOffset(days: number): string {
     const d = new Date();
     d.setDate(d.getDate() + days);
+
     return d.toISOString().slice(0, 10);
 }
 
@@ -150,9 +213,17 @@ function nextWorkdayISO(): string {
     const d = new Date();
     const day = d.getDay();
     let offset = 1;
-    if (day === 5) offset = 3;
-    if (day === 6) offset = 2;
+
+    if (day === 5) {
+        offset = 3;
+    }
+
+    if (day === 6) {
+        offset = 2;
+    }
+
     d.setDate(d.getDate() + offset);
+
     return d.toISOString().slice(0, 10);
 }
 </script>
@@ -202,9 +273,7 @@ function nextWorkdayISO(): string {
                         <span
                             class="inline-flex size-3.5 items-center justify-center"
                         >
-                            <span
-                                :class="['size-2 rounded-full', opt.dot]"
-                            />
+                            <span :class="['size-2 rounded-full', opt.dot]" />
                         </span>
                         <span>{{ opt.label }}</span>
                         <ContextMenuShortcut v-if="todo.priority === opt.value"
@@ -282,6 +351,36 @@ function nextWorkdayISO(): string {
                 </ContextMenuSubContent>
             </ContextMenuSub>
 
+            <ContextMenuSub>
+                <ContextMenuSubTrigger>
+                    <Repeat />
+                    <span>Herhaal</span>
+                    <ContextMenuShortcut v-if="isRecurring"
+                        >aan</ContextMenuShortcut
+                    >
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                    <ContextMenuItem
+                        v-for="preset in recurrencePresets"
+                        :key="preset.key"
+                        @click="setRecurrence(preset.key)"
+                    >
+                        <span>{{ preset.label }}</span>
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem @click="emit('custom-recurrence')">
+                        <span>Aangepast…</span>
+                    </ContextMenuItem>
+                    <template v-if="isRecurring">
+                        <ContextMenuSeparator />
+                        <ContextMenuItem @click="stopRecurrence">
+                            <X />
+                            <span>Stop herhaling</span>
+                        </ContextMenuItem>
+                    </template>
+                </ContextMenuSubContent>
+            </ContextMenuSub>
+
             <ContextMenuSub v-if="customLists.length > 0">
                 <ContextMenuSubTrigger>
                     <Inbox />
@@ -307,10 +406,7 @@ function nextWorkdayISO(): string {
                 <span>Zet in vandaag</span>
             </ContextMenuItem>
 
-            <ContextMenuItem
-                v-if="isTodayList"
-                @click="removeFromCurrentList"
-            >
+            <ContextMenuItem v-if="isTodayList" @click="removeFromCurrentList">
                 <X />
                 <span>Verwijder van vandaag</span>
                 <ContextMenuShortcut>blijft master</ContextMenuShortcut>

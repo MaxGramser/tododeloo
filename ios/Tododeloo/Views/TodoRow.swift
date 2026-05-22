@@ -42,11 +42,17 @@ struct TodoRow<MenuContent: View>: View {
             || todo.totalSubTodoCount > 0
             || !memberships.isEmpty
             || todo.priorityValue == .high
+            || todo.isRecurring
 
         if hasMeta {
             HStack(spacing: 7) {
                 if todo.priorityValue == .high {
                     MonoLabel("Hoog", color: Theme.accent)
+                }
+                if todo.isRecurring {
+                    Image(systemName: "repeat")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.faint)
                 }
                 ForEach(tags) { tag in
                     TagChip(tag: tag)
@@ -68,6 +74,7 @@ struct TodoMenu: View {
     let todo: Todo
     let isToday: Bool
     let canRemoveFromList: Bool
+    let recurrencePresets: [RecurrencePresetOption]
 
     let onOpen: () -> Void
     let onToggle: () -> Void
@@ -76,6 +83,9 @@ struct TodoMenu: View {
     let onAddSub: () -> Void
     let onRename: () -> Void
     let onMove: () -> Void
+    let onSetRecurrence: (String) -> Void
+    let onCustomRecurrence: () -> Void
+    let onStopRecurrence: () -> Void
     let onDuplicate: () -> Void
     let onRemoveFromList: () -> Void
     let onDelete: () -> Void
@@ -122,6 +132,25 @@ struct TodoMenu: View {
         Button(action: onMove) {
             Label("Verplaats naar datum", systemImage: "calendar")
         }
+
+        Menu {
+            ForEach(recurrencePresets) { preset in
+                Button(preset.label) { onSetRecurrence(preset.key) }
+            }
+            Divider()
+            Button(action: onCustomRecurrence) {
+                Label("Aangepast…", systemImage: "slider.horizontal.3")
+            }
+            if todo.isRecurring {
+                Divider()
+                Button(role: .destructive, action: onStopRecurrence) {
+                    Label("Stop herhaling", systemImage: "xmark")
+                }
+            }
+        } label: {
+            Label(todo.isRecurring ? "Herhaal · aan" : "Herhaal", systemImage: "repeat")
+        }
+
         Button(action: onDuplicate) {
             Label("Dupliceren", systemImage: "plus.square.on.square")
         }

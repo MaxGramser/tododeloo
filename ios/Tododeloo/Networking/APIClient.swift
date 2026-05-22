@@ -180,6 +180,28 @@ final class APIClient {
         return response.todo
     }
 
+    // MARK: - Recurrence
+
+    func setRecurrence(_ todoId: Int, preset: String, anchorDate: String) async throws -> Todo {
+        let response: TodoResponse = try await send(.post, "todos/\(todoId)/recurrence", body: [
+            "preset": preset,
+            "anchor_date": anchorDate,
+        ])
+        return response.todo
+    }
+
+    func setRecurrence(_ todoId: Int, rrule: String, anchorDate: String) async throws -> Todo {
+        let response: TodoResponse = try await send(.post, "todos/\(todoId)/recurrence", body: [
+            "rrule": rrule,
+            "anchor_date": anchorDate,
+        ])
+        return response.todo
+    }
+
+    func stopRecurrence(_ recurrenceId: Int) async throws {
+        try await sendVoid(.delete, "recurrences/\(recurrenceId)")
+    }
+
     @discardableResult
     func quickAdd(title: String) async throws -> QuickAddResponse {
         try await send(.post, "quick-add", body: ["title": title])

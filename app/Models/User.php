@@ -60,4 +60,9 @@ class User extends Authenticatable implements PasskeyUser
     {
         return $this->hasMany(Tag::class);
     }
+
+    public function recurrences(): HasMany
+    {
+        return $this->hasMany(Recurrence::class);
+    }
 }

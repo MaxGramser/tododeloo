@@ -21,6 +21,20 @@ export type SubTodo = {
     position: number;
 };
 
+export type Recurrence = {
+    id: number;
+    rrule: string;
+    active: boolean;
+};
+
+export type RecurrencePreset =
+    | 'daily'
+    | 'weekdays'
+    | 'weekly'
+    | 'monthly_nth_weekday'
+    | 'half_yearly'
+    | 'yearly';
+
 export type Todo = {
     id: number;
     title: string;
@@ -28,6 +42,8 @@ export type Todo = {
     priority: Priority;
     completed_at: string | null;
     created_at: string;
+    recurrence_id: number | null;
+    recurrence?: Recurrence | null;
     tags: Tag[];
     position?: number;
     list_memberships?: ListMembership[];

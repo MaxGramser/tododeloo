@@ -8,6 +8,7 @@ use App\Http\Controllers\ListReorderController;
 use App\Http\Controllers\ListSortModeController;
 use App\Http\Controllers\MasterListController;
 use App\Http\Controllers\QuickAddController;
+use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\SubTodoController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TodoController;
@@ -65,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('todos/{todo}/duplicate', [TodoController::class, 'duplicate'])->name('todos.duplicate');
     Route::post('todos/{todo}/move-to-date', [TodoController::class, 'moveToDate'])->name('todos.move-to-date');
     Route::patch('todos/{todo}/tags', [TodoController::class, 'syncTags'])->name('todos.tags.sync');
+
+    Route::post('todos/{todo}/recurrence', [RecurrenceController::class, 'store'])->name('todos.recurrence.store');
+    Route::delete('recurrences/{recurrence}', [RecurrenceController::class, 'destroy'])->name('recurrences.destroy');
 
     Route::post('todos/{todo}/sub-todos', [SubTodoController::class, 'store'])->name('sub-todos.store');
     Route::patch('sub-todos/{subTodo}', [SubTodoController::class, 'update'])->name('sub-todos.update');

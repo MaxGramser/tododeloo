@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['user_id', 'title', 'description', 'priority', 'completed_at'])]
+#[Fillable(['user_id', 'recurrence_id', 'occurred_on', 'title', 'description', 'priority', 'completed_at'])]
 class Todo extends Model
 {
     /** @use HasFactory<TodoFactory> */
@@ -23,6 +23,7 @@ class Todo extends Model
     {
         return [
             'completed_at' => 'datetime',
+            'occurred_on' => 'date',
             'priority' => Priority::class,
         ];
     }
@@ -30,6 +31,11 @@ class Todo extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function recurrence(): BelongsTo
+    {
+        return $this->belongsTo(Recurrence::class);
     }
 
     public function lists(): BelongsToMany
@@ -63,5 +69,19 @@ class Todo extends Model
     public function scopeCompleted(Builder $query): void
     {
         $query->whereNotNull('completed_at');
+    }
+
+    /**
+     * Exclude recurrence instances. They regenerate each occurrence, so they
+     * must never be offered as carry-over candidates.
+     */
+    public function scopeNotRecurring(Builder $query): void
+    {
+        $query->whereNull('recurrence_id');
+    }
+
+    public function isRecurrenceInstance(): bool
+    {
+        return $this->recurrence_id !== null;
     }
 }

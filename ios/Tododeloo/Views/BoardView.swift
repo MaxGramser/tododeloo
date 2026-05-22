@@ -126,6 +126,7 @@ struct BoardView: View {
                 todo: todo,
                 isToday: model.context == .today,
                 canRemoveFromList: model.canRemoveFromList,
+                recurrencePresets: model.recurrencePresets,
                 onOpen: { sheet = .detail(todo) },
                 onToggle: { Task { await model.toggle(todo) } },
                 onAddToday: { Task { await model.addToToday(todo) } },
@@ -133,6 +134,9 @@ struct BoardView: View {
                 onAddSub: { sheet = .addSub(todo) },
                 onRename: { sheet = .rename(todo) },
                 onMove: { sheet = .move(todo) },
+                onSetRecurrence: { preset in Task { await model.setRecurrence(todo, preset: preset) } },
+                onCustomRecurrence: { sheet = .customRecurrence(todo) },
+                onStopRecurrence: { Task { await model.stopRecurrence(todo) } },
                 onDuplicate: { Task { await model.duplicate(todo) } },
                 onRemoveFromList: { Task { await model.removeFromList(todo) } },
                 onDelete: { Task { await model.delete(todo) } }
@@ -160,6 +164,10 @@ struct BoardView: View {
         case .addSub(let todo):
             AddSubTodoSheet { title in
                 Task { await model.addSubTodo(todo, title: title) }
+            }
+        case .customRecurrence(let todo):
+            RecurrenceSheet(anchorISO: model.recurrenceAnchorISO) { rrule in
+                Task { await model.setCustomRecurrence(todo, rrule: rrule) }
             }
         }
     }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DailyController;
 use App\Http\Controllers\Api\ListController;
 use App\Http\Controllers\Api\QuickAddController;
+use App\Http\Controllers\Api\RecurrenceController;
 use App\Http\Controllers\Api\SubTodoController;
 use App\Http\Controllers\Api\TagController;
 use App\Http\Controllers\Api\TodoController;
@@ -46,6 +47,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('todos/{todo}/duplicate', [TodoController::class, 'duplicate'])->name('todos.duplicate');
     Route::post('todos/{todo}/move-to-date', [TodoController::class, 'moveToDate'])->name('todos.move-to-date');
     Route::patch('todos/{todo}/tags', [TodoController::class, 'syncTags'])->name('todos.tags.sync');
+
+    Route::post('todos/{todo}/recurrence', [RecurrenceController::class, 'store'])->name('todos.recurrence.store');
+    Route::delete('recurrences/{recurrence}', [RecurrenceController::class, 'destroy'])->name('recurrences.destroy');
 
     Route::post('todos/{todo}/sub-todos', [SubTodoController::class, 'store'])->name('sub-todos.store');
     Route::patch('sub-todos/{subTodo}', [SubTodoController::class, 'update'])->name('sub-todos.update');

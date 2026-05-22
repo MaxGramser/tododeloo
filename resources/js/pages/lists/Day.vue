@@ -13,11 +13,13 @@ const props = defineProps<{
     needsRitual: boolean;
     previousWorkday: string;
     carryOverCandidates: Todo[];
+    earlierCandidates: Todo[];
     masterOpenTodos: Todo[];
     preScheduled: Todo[];
 }>();
 
 const selectedCarry = ref<Set<number>>(new Set());
+const selectedEarlier = ref<Set<number>>(new Set());
 const selectedFromMaster = ref<Set<number>>(new Set());
 const newTodos = ref<string[]>([]);
 const newTodoTitle = ref('');
@@ -58,34 +60,42 @@ const completionPercent = computed(() => {
     const total = openCount.value + doneCount.value;
 
     if (total === 0) {
-return 0;
-}
+        return 0;
+    }
 
     return Math.round((doneCount.value / total) * 100);
 });
 
 function toggleCarry(id: number) {
     if (selectedCarry.value.has(id)) {
-selectedCarry.value.delete(id);
-} else {
-selectedCarry.value.add(id);
+        selectedCarry.value.delete(id);
+    } else {
+        selectedCarry.value.add(id);
+    }
 }
+
+function toggleEarlier(id: number) {
+    if (selectedEarlier.value.has(id)) {
+        selectedEarlier.value.delete(id);
+    } else {
+        selectedEarlier.value.add(id);
+    }
 }
 
 function toggleMaster(id: number) {
     if (selectedFromMaster.value.has(id)) {
-selectedFromMaster.value.delete(id);
-} else {
-selectedFromMaster.value.add(id);
-}
+        selectedFromMaster.value.delete(id);
+    } else {
+        selectedFromMaster.value.add(id);
+    }
 }
 
 function addNewTodo() {
     const title = newTodoTitle.value.trim();
 
     if (!title) {
-return;
-}
+        return;
+    }
 
     newTodos.value.push(title);
     newTodoTitle.value = '';
@@ -97,12 +107,16 @@ function removeNewTodo(idx: number) {
 
 function startDay() {
     if (adding.value) {
-return;
-}
+        return;
+    }
 
     adding.value = true;
 
-    const carryOverIds = [...selectedCarry.value, ...selectedFromMaster.value];
+    const carryOverIds = [
+        ...selectedCarry.value,
+        ...selectedEarlier.value,
+        ...selectedFromMaster.value,
+    ];
 
     router.post(
         `/day/${props.date}/start`,
@@ -196,7 +210,7 @@ const previousLabel = computed(() => {
                 <span
                     class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                 >
-                    meenemen
+                    vorige werkdag
                 </span>
                 <span
                     v-if="carryOverCandidates.length"
@@ -251,6 +265,67 @@ const previousLabel = computed(() => {
                             class="flex-1 text-sm transition-colors"
                             :class="
                                 !selectedCarry.has(todo.id) &&
+                                'text-muted-foreground'
+                            "
+                            >{{ todo.title }}</span
+                        >
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section v-if="earlierCandidates.length" class="pt-12">
+            <header class="mb-2 flex items-baseline gap-2">
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                >
+                    eerder
+                </span>
+                <span class="font-mono text-[10px] text-muted-foreground/40"
+                    >({{ earlierCandidates.length }})</span
+                >
+                <span
+                    class="ml-auto font-mono text-[10px] tracking-wide text-muted-foreground/60 lowercase"
+                    >langer blijven liggen</span
+                >
+            </header>
+            <ul>
+                <li
+                    v-for="todo in earlierCandidates"
+                    :key="`earlier-${todo.id}`"
+                    class="border-b border-border/40"
+                >
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-3 py-2.5 text-left"
+                        @click="toggleEarlier(todo.id)"
+                    >
+                        <span
+                            class="relative grid size-5 shrink-0 place-items-center rounded-full border transition-colors"
+                            :class="
+                                selectedEarlier.has(todo.id)
+                                    ? 'border-accent bg-accent text-accent-foreground'
+                                    : 'border-input'
+                            "
+                        >
+                            <svg
+                                v-if="selectedEarlier.has(todo.id)"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                class="size-3"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </span>
+                        <span
+                            class="flex-1 text-sm transition-colors"
+                            :class="
+                                !selectedEarlier.has(todo.id) &&
                                 'text-muted-foreground'
                             "
                             >{{ todo.title }}</span

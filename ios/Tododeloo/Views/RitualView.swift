@@ -20,7 +20,10 @@ struct RitualView: View {
                     fixedSection(title: "Al gepland", todos: model.preScheduled)
                 }
                 if !model.carryOverCandidates.isEmpty {
-                    selectableSection(title: "Bleef liggen", todos: model.carryOverCandidates)
+                    selectableSection(title: "Vorige werkdag", todos: model.carryOverCandidates)
+                }
+                if !model.earlierCandidates.isEmpty {
+                    selectableSection(title: "Eerder", todos: model.earlierCandidates)
                 }
                 if !model.masterOpenTodos.isEmpty {
                     selectableSection(title: "Uit alles", todos: model.masterOpenTodos)

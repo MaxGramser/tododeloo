@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, inject, ref, watch, type Ref } from 'vue';
-import { ChevronDown, GripVertical, Trash2, X } from 'lucide-vue-next';
+import { ChevronDown, GripVertical, Repeat, Trash2, X } from 'lucide-vue-next';
+import { computed, inject, ref, watch } from 'vue';
+import type { Ref } from 'vue';
 import { toast } from 'vue-sonner';
 import PriorityDot from '@/components/todo/PriorityDot.vue';
+import RecurrenceModal from '@/components/todo/RecurrenceModal.vue';
 import SubProgressRing from '@/components/todo/SubProgressRing.vue';
 import SubTodoList from '@/components/todo/SubTodoList.vue';
 import SubTodoModal from '@/components/todo/SubTodoModal.vue';
@@ -23,23 +25,30 @@ const isMaster = computed(() => props.list.type === 'master');
 
 const subs = computed(() => props.todo.sub_todos ?? []);
 const hasSubs = computed(() => subs.value.length > 0);
-const subDone = computed(
-    () => subs.value.filter((s) => s.completed_at).length,
-);
+const subDone = computed(() => subs.value.filter((s) => s.completed_at).length);
 
 const editing = ref(false);
 const editTitle = ref(props.todo.title);
 const tagsOpen = ref(false);
 const subModalOpen = ref(false);
+const recurrenceModalOpen = ref(false);
 
-const subsGlobal = inject<Ref<'all' | 'none' | null>>(
-    'subsGlobal',
-    ref(null),
+const recurrenceAnchorISO = computed(() =>
+    props.list.type === 'daily' && props.list.date
+        ? props.list.date
+        : new Date().toLocaleDateString('en-CA'),
 );
+
+const subsGlobal = inject<Ref<'all' | 'none' | null>>('subsGlobal', ref(null));
 const expanded = ref(subsGlobal.value === 'all' && hasSubs.value);
 watch(subsGlobal, (v) => {
-    if (v === 'all' && hasSubs.value) expanded.value = true;
-    if (v === 'none') expanded.value = false;
+    if (v === 'all' && hasSubs.value) {
+        expanded.value = true;
+    }
+
+    if (v === 'none') {
+        expanded.value = false;
+    }
 });
 
 const otherMemberships = computed(() =>
@@ -49,8 +58,10 @@ const otherMemberships = computed(() =>
 function checkboxClick() {
     if (hasSubs.value) {
         expanded.value = !expanded.value;
+
         return;
     }
+
     toggleCompleted();
 }
 
@@ -72,10 +83,13 @@ function startEdit() {
 
 function commitEdit() {
     const next = editTitle.value.trim();
+
     if (!next || next === props.todo.title) {
         editing.value = false;
+
         return;
     }
+
     router.patch(
         `/todos/${props.todo.id}`,
         { title: next },
@@ -127,6 +141,7 @@ function softDelete() {
             @edit="startEdit"
             @open-tags="tagsOpen = true"
             @add-subtodo="subModalOpen = true"
+            @custom-recurrence="recurrenceModalOpen = true"
         >
             <div
                 class="group flex items-center gap-2 py-2.5 transition-colors hover:bg-card/40"
@@ -252,6 +267,15 @@ function softDelete() {
                     />
                 </button>
 
+                <span
+                    v-if="todo.recurrence_id"
+                    class="hidden items-center text-muted-foreground/60 sm:flex"
+                    title="Herhalende taak"
+                    aria-label="Herhalende taak"
+                >
+                    <Repeat class="size-3" />
+                </span>
+
                 <div
                     v-if="otherMemberships.length"
                     class="hidden items-center gap-2 font-mono text-[10px] tracking-widest text-muted-foreground/70 uppercase sm:flex"
@@ -311,6 +335,13 @@ function softDelete() {
             :todo="todo"
             :open="subModalOpen"
             @update:open="subModalOpen = $event"
+        />
+
+        <RecurrenceModal
+            :todo="todo"
+            :open="recurrenceModalOpen"
+            :anchor-iso="recurrenceAnchorISO"
+            @update:open="recurrenceModalOpen = $event"
         />
     </div>
 </template>
