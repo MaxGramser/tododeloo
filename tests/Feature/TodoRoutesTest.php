@@ -112,12 +112,13 @@ it('refuses to remove a todo from its master list', function () {
     )->toThrow(InvalidArgumentException::class);
 });
 
-it('renders the day page with a morning ritual when no list exists', function () {
+it('renders the day page with a morning ritual when today has not started', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
     $previous = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 19));
     $todo = app(CreateTodo::class)($this->user, ['title' => 'Niet af gisteren']);
     app(AddTodoToList::class)($todo, $previous);
 
-    $this->get(route('day.show', '2026-05-20'))
+    $this->get(route('today.show'))
         ->assertOk()
         ->assertInertia(
             fn ($page) => $page
@@ -126,19 +127,50 @@ it('renders the day page with a morning ritual when no list exists', function ()
                 ->where('previousWorkday', '2026-05-19')
                 ->has('carryOverCandidates', 1),
         );
+
+    CarbonImmutable::setTestNow();
 });
 
-it('carries todos over to a new day', function () {
+it('still shows the ritual today even when todos were pre-scheduled', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
+    $today = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::today());
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Vooruit gepland']);
+    app(AddTodoToList::class)($todo, $today);
+
+    $this->get(route('today.show'))
+        ->assertOk()
+        ->assertInertia(
+            fn ($page) => $page
+                ->component('lists/Day')
+                ->where('needsRitual', true)
+                ->has('preScheduled', 1)
+                ->where('preScheduled.0.title', 'Vooruit gepland'),
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
+it('start marks the day as started and carries selected todos plus new ones', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
     $previous = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 19));
-    $todo = app(CreateTodo::class)($this->user, ['title' => 'Pak op']);
-    app(AddTodoToList::class)($todo, $previous);
+    $carry = app(CreateTodo::class)($this->user, ['title' => 'Pak op']);
+    app(AddTodoToList::class)($carry, $previous);
 
-    $this->post(route('day.carry-over', '2026-05-20'), ['todo_ids' => [$todo->id]])
-        ->assertRedirect();
+    $this->post(route('day.start', '2026-05-20'), [
+        'carry_over_ids' => [$carry->id],
+        'new_titles' => ['Nieuw vandaag'],
+    ])->assertRedirect();
 
-    $dailyList = $this->user->lists()->whereDate('date', '2026-05-20')->first();
-    expect($dailyList)->not->toBeNull()
-        ->and($dailyList->todos)->toHaveCount(1);
+    $daily = $this->user->lists()->whereDate('date', '2026-05-20')->first();
+    expect($daily)->not->toBeNull()
+        ->and($daily->started_at)->not->toBeNull()
+        ->and($daily->todos)->toHaveCount(2);
+
+    // after starting, the ritual no longer fires
+    $this->get(route('today.show'))
+        ->assertInertia(fn ($page) => $page->where('needsRitual', false));
+
+    CarbonImmutable::setTestNow();
 });
 
 it('quick-adds a todo to today on a weekday', function () {

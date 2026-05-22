@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { ArrowRight, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import { ArrowRight, Inbox, Plus } from 'lucide-vue-next';
 import PageHero from '@/components/PageHero.vue';
 import TodoListView from '@/components/todo/TodoListView.vue';
 import type { Todo, TodoList } from '@/types';
@@ -14,6 +14,7 @@ const props = defineProps<{
     previousWorkday: string;
     carryOverCandidates: Todo[];
     masterOpenTodos: Todo[];
+    preScheduled: Todo[];
 }>();
 
 const selectedCarry = ref<Set<number>>(new Set());
@@ -24,9 +25,11 @@ const adding = ref(false);
 
 const headerTitle = computed(() => {
     const d = new Date(props.date + 'T00:00:00');
+
     if (props.isToday) {
         return 'Vandaag';
     }
+
     return d.toLocaleDateString('nl-NL', {
         weekday: 'long',
         day: 'numeric',
@@ -36,6 +39,7 @@ const headerTitle = computed(() => {
 
 const headerSub = computed(() => {
     const d = new Date(props.date + 'T00:00:00');
+
     return d.toLocaleDateString('nl-NL', {
         weekday: 'long',
         day: 'numeric',
@@ -52,23 +56,37 @@ const doneCount = computed(
 );
 const completionPercent = computed(() => {
     const total = openCount.value + doneCount.value;
-    if (total === 0) return 0;
+
+    if (total === 0) {
+return 0;
+}
+
     return Math.round((doneCount.value / total) * 100);
 });
 
 function toggleCarry(id: number) {
-    if (selectedCarry.value.has(id)) selectedCarry.value.delete(id);
-    else selectedCarry.value.add(id);
+    if (selectedCarry.value.has(id)) {
+selectedCarry.value.delete(id);
+} else {
+selectedCarry.value.add(id);
+}
 }
 
 function toggleMaster(id: number) {
-    if (selectedFromMaster.value.has(id)) selectedFromMaster.value.delete(id);
-    else selectedFromMaster.value.add(id);
+    if (selectedFromMaster.value.has(id)) {
+selectedFromMaster.value.delete(id);
+} else {
+selectedFromMaster.value.add(id);
+}
 }
 
 function addNewTodo() {
     const title = newTodoTitle.value.trim();
-    if (!title) return;
+
+    if (!title) {
+return;
+}
+
     newTodos.value.push(title);
     newTodoTitle.value = '';
 }
@@ -78,72 +96,32 @@ function removeNewTodo(idx: number) {
 }
 
 function startDay() {
-    if (adding.value) return;
+    if (adding.value) {
+return;
+}
+
     adding.value = true;
 
-    const allCarry = [
-        ...selectedCarry.value,
-        ...selectedFromMaster.value,
-    ];
+    const carryOverIds = [...selectedCarry.value, ...selectedFromMaster.value];
 
-    const finish = async () => {
-        // create new todos sequentially so they all land on today's daily list
-        for (const title of newTodos.value) {
-            await new Promise<void>((resolve) => {
-                router.post(
-                    '/todos',
-                    { title },
-                    {
-                        preserveScroll: true,
-                        preserveState: true,
-                        onFinish: () => resolve(),
-                    },
-                );
-            });
-        }
-        // refresh the page so the carry-over + new items appear
-        router.reload({ preserveScroll: true });
-        adding.value = false;
-    };
-
-    if (allCarry.length > 0) {
-        router.post(
-            `/day/${props.date}/carry-over`,
-            { todo_ids: allCarry },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    if (newTodos.value.length === 0) {
-                        router.reload({ preserveScroll: true });
-                        adding.value = false;
-                    } else {
-                        void finish();
-                    }
-                },
+    router.post(
+        `/day/${props.date}/start`,
+        {
+            carry_over_ids: carryOverIds,
+            new_titles: newTodos.value,
+        },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                adding.value = false;
             },
-        );
-    } else if (newTodos.value.length > 0) {
-        void finish();
-    } else {
-        // user wants an empty daily list — create it by posting an empty carry-over
-        router.post(
-            `/day/${props.date}/carry-over`,
-            { todo_ids: [] },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    router.reload({ preserveScroll: true });
-                    adding.value = false;
-                },
-            },
-        );
-    }
+        },
+    );
 }
 
 const previousLabel = computed(() => {
     const d = new Date(props.previousWorkday + 'T00:00:00');
+
     return d.toLocaleDateString('nl-NL', {
         weekday: 'long',
         day: 'numeric',
@@ -161,165 +139,219 @@ const previousLabel = computed(() => {
         accent
         :sub="headerSub"
         :counter="
-            list
+            !needsRitual && list
                 ? { value: `${completionPercent}%`, label: 'klaar' }
                 : undefined
         "
     />
 
-    <div v-if="needsRitual" class="flex flex-col gap-10 px-6 pb-32 sm:px-10">
-        <section class="pt-8">
-            <header class="mb-3 flex items-center justify-between">
-                <h2
-                    class="flex items-center gap-2 text-xl font-bold tracking-tight"
+    <div v-if="needsRitual" class="px-6 pb-40 sm:px-10">
+        <form
+            class="group flex items-center gap-3 border-b border-border py-4"
+            @submit.prevent="addNewTodo"
+        >
+            <span
+                class="grid size-5 shrink-0 place-items-center text-muted-foreground/50"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="size-3"
                 >
-                    <Plus class="size-5" /> Nieuw vandaag
-                </h2>
+                    <path
+                        d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z"
+                    />
+                </svg>
+            </span>
+            <input
+                v-model="newTodoTitle"
+                type="text"
+                placeholder="Iets nieuws voor vandaag…"
+                class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+            />
+        </form>
+
+        <ul v-if="newTodos.length" class="mt-1">
+            <li
+                v-for="(t, i) in newTodos"
+                :key="i"
+                class="group flex items-center gap-3 border-b border-border/40 py-2.5"
+            >
+                <span class="size-1.5 shrink-0 rounded-full bg-accent" />
+                <span class="flex-1 text-sm">{{ t }}</span>
+                <button
+                    type="button"
+                    class="text-muted-foreground/40 opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground"
+                    aria-label="Verwijderen"
+                    @click="removeNewTodo(i)"
+                >
+                    <X class="size-3.5" />
+                </button>
+            </li>
+        </ul>
+
+        <section class="pt-12">
+            <header class="mb-2 flex items-baseline gap-2">
                 <span
                     class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                 >
-                    stap 1 · intentie
+                    meenemen
                 </span>
+                <span
+                    v-if="carryOverCandidates.length"
+                    class="font-mono text-[10px] text-muted-foreground/40"
+                    >({{ carryOverCandidates.length }})</span
+                >
+                <span
+                    class="ml-auto font-mono text-[10px] tracking-wide text-muted-foreground/60 lowercase"
+                    >van {{ previousLabel }}</span
+                >
             </header>
-            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
-                Waar gaat vandaag eigenlijk over? Type wat nieuw is — wordt
-                ook in master gezet.
-            </p>
-            <form
-                class="flex items-center gap-2 border-y border-border/60 py-2"
-                @submit.prevent="addNewTodo"
+            <p
+                v-if="carryOverCandidates.length === 0"
+                class="py-3 text-sm text-muted-foreground/70"
             >
-                <Plus class="size-4 text-muted-foreground" />
-                <input
-                    v-model="newTodoTitle"
-                    type="text"
-                    placeholder="Iets nieuws voor vandaag…"
-                    class="flex-1 bg-transparent text-sm outline-none"
-                />
-                <button
-                    type="submit"
-                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase hover:text-foreground"
-                >
-                    enter · toevoegen
-                </button>
-            </form>
-            <ul v-if="newTodos.length" class="mt-3 divide-y divide-border/60">
+                Niets blijven liggen.
+            </p>
+            <ul v-else>
                 <li
-                    v-for="(t, i) in newTodos"
-                    :key="i"
-                    class="flex items-center gap-3 py-2"
+                    v-for="todo in carryOverCandidates"
+                    :key="`carry-${todo.id}`"
+                    class="border-b border-border/40"
                 >
-                    <span class="text-sm">{{ t }}</span>
                     <button
                         type="button"
-                        class="ml-auto font-mono text-[10px] tracking-widest text-muted-foreground uppercase hover:text-destructive"
-                        @click="removeNewTodo(i)"
+                        class="flex w-full items-center gap-3 py-2.5 text-left"
+                        @click="toggleCarry(todo.id)"
                     >
-                        verwijder
+                        <span
+                            class="relative grid size-5 shrink-0 place-items-center rounded-full border transition-colors"
+                            :class="
+                                selectedCarry.has(todo.id)
+                                    ? 'border-accent bg-accent text-accent-foreground'
+                                    : 'border-input'
+                            "
+                        >
+                            <svg
+                                v-if="selectedCarry.has(todo.id)"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                class="size-3"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </span>
+                        <span
+                            class="flex-1 text-sm transition-colors"
+                            :class="
+                                !selectedCarry.has(todo.id) &&
+                                'text-muted-foreground'
+                            "
+                            >{{ todo.title }}</span
+                        >
                     </button>
                 </li>
             </ul>
         </section>
 
-        <section>
-            <header class="mb-3 flex items-center justify-between">
-                <h2 class="text-xl font-bold tracking-tight">
-                    Van {{ previousLabel }}
-                </h2>
+        <section class="pt-12">
+            <header class="mb-2 flex items-baseline gap-2">
                 <span
                     class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                 >
-                    stap 2 · meenemen
+                    master
                 </span>
-            </header>
-            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
-                Niet-afgemaakte todos van vorige werkdag. Vink aan wat je
-                vandaag wil oppakken.
-            </p>
-            <div
-                v-if="carryOverCandidates.length === 0"
-                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
-            >
-                Niets om mee te nemen — vorige werkdag was schoon afgesloten.
-            </div>
-            <ul
-                v-else
-                class="divide-y divide-border/60 border-y border-border/60"
-            >
-                <li
-                    v-for="todo in carryOverCandidates"
-                    :key="`carry-${todo.id}`"
-                    class="flex items-center gap-3 py-2.5"
-                >
-                    <input
-                        :id="`carry-${todo.id}`"
-                        type="checkbox"
-                        class="size-4 cursor-pointer rounded border-input accent-accent"
-                        :checked="selectedCarry.has(todo.id)"
-                        @change="toggleCarry(todo.id)"
-                    />
-                    <label
-                        :for="`carry-${todo.id}`"
-                        class="flex-1 cursor-pointer text-sm"
-                    >
-                        {{ todo.title }}
-                    </label>
-                </li>
-            </ul>
-        </section>
-
-        <section>
-            <header class="mb-3 flex items-center justify-between">
-                <h2
-                    class="flex items-center gap-2 text-xl font-bold tracking-tight"
-                >
-                    <Inbox class="size-5" /> Uit master
-                </h2>
                 <span
-                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                    v-if="masterOpenTodos.length"
+                    class="font-mono text-[10px] text-muted-foreground/40"
+                    >({{ masterOpenTodos.length }})</span
                 >
-                    stap 3 · aanvullen
-                </span>
             </header>
-            <p class="mb-4 max-w-prose text-sm text-muted-foreground">
-                Wil je nog iets uit je master oppakken vandaag?
-            </p>
-            <div
+            <p
                 v-if="masterOpenTodos.length === 0"
-                class="rounded-xl border border-dashed border-border/70 bg-card/60 p-6 text-sm text-muted-foreground"
+                class="py-3 text-sm text-muted-foreground/70"
             >
                 Master is leeg.
-            </div>
-            <ul
-                v-else
-                class="divide-y divide-border/60 border-y border-border/60"
-            >
+            </p>
+            <ul v-else>
                 <li
                     v-for="todo in masterOpenTodos"
                     :key="`master-${todo.id}`"
-                    class="flex items-center gap-3 py-2.5"
+                    class="border-b border-border/40"
                 >
-                    <input
-                        :id="`master-${todo.id}`"
-                        type="checkbox"
-                        class="size-4 cursor-pointer rounded border-input accent-accent"
-                        :checked="selectedFromMaster.has(todo.id)"
-                        @change="toggleMaster(todo.id)"
-                    />
-                    <label
-                        :for="`master-${todo.id}`"
-                        class="flex-1 cursor-pointer text-sm"
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-3 py-2.5 text-left"
+                        @click="toggleMaster(todo.id)"
                     >
-                        {{ todo.title }}
-                    </label>
+                        <span
+                            class="relative grid size-5 shrink-0 place-items-center rounded-full border transition-colors"
+                            :class="
+                                selectedFromMaster.has(todo.id)
+                                    ? 'border-accent bg-accent text-accent-foreground'
+                                    : 'border-input'
+                            "
+                        >
+                            <svg
+                                v-if="selectedFromMaster.has(todo.id)"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                class="size-3"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </span>
+                        <span
+                            class="flex-1 text-sm transition-colors"
+                            :class="
+                                !selectedFromMaster.has(todo.id) &&
+                                'text-muted-foreground'
+                            "
+                            >{{ todo.title }}</span
+                        >
+                    </button>
                 </li>
             </ul>
         </section>
 
-        <div class="flex items-center justify-end pt-4">
+        <section v-if="preScheduled.length" class="pt-12">
+            <header class="mb-2 flex items-baseline gap-2">
+                <span
+                    class="font-mono text-[10px] tracking-widest text-accent uppercase"
+                >
+                    al gepland
+                </span>
+                <span class="font-mono text-[10px] text-accent/50"
+                    >({{ preScheduled.length }})</span
+                >
+            </header>
+            <ul>
+                <li
+                    v-for="todo in preScheduled"
+                    :key="`pre-${todo.id}`"
+                    class="flex items-center gap-3 border-b border-border/40 py-2.5"
+                >
+                    <span class="size-1.5 shrink-0 rounded-full bg-accent" />
+                    <span class="flex-1 text-sm">{{ todo.title }}</span>
+                </li>
+            </ul>
+        </section>
+
+        <div class="flex justify-end pt-12">
             <button
                 type="button"
-                class="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-50"
+                class="inline-flex items-center gap-2 bg-foreground px-6 py-3 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
                 :disabled="adding"
                 @click="startDay"
             >

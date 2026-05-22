@@ -28,9 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('day/{date}', [DailyListController::class, 'show'])
         ->where('date', '\d{4}-\d{2}-\d{2}')
         ->name('day.show');
-    Route::post('day/{date}/carry-over', [DailyListController::class, 'carryOver'])
+    Route::post('day/{date}/start', [DailyListController::class, 'start'])
         ->where('date', '\d{4}-\d{2}-\d{2}')
-        ->name('day.carry-over');
+        ->name('day.start');
 
     Route::post('lists', [CustomListController::class, 'store'])->name('lists.store');
     Route::get('lists/{list}', [CustomListController::class, 'show'])->name('lists.show');

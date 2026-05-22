@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__laravel-boost__database-connections",
-      "mcp__laravel-boost__get-absolute-url"
+      "mcp__laravel-boost__get-absolute-url",
+      "mcp__laravel-boost__search-docs"
     ]
   },
   "enableAllProjectMcpServers": true,

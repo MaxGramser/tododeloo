@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['user_id', 'type', 'name', 'date', 'sort_mode'])]
+#[Fillable(['user_id', 'type', 'name', 'date', 'sort_mode', 'started_at'])]
 class TodoList extends Model
 {
     /** @use HasFactory<TodoListFactory> */
@@ -26,6 +26,7 @@ class TodoList extends Model
             'type' => ListType::class,
             'sort_mode' => SortMode::class,
             'date' => 'date',
+            'started_at' => 'datetime',
         ];
     }
 
