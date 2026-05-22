@@ -27,3 +27,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# iOS / Xcode
+**/xcuserdata/
+*.xcuserstate
+/ios/build/
+/ios/DerivedData/
+/ios/.DS_Store
+# Local-only signing (keeps your Apple Team ID out of the repo)
+/ios/Config/Local.xcconfig

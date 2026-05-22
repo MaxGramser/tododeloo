@@ -1,0 +1,4 @@
+// Copy this file to Local.xcconfig (which is git-ignored) and set your team.
+// Find your Team ID in Xcode → Settings → Accounts, or on the Apple Developer
+// portal. Local.xcconfig is read automatically when you build.
+DEVELOPMENT_TEAM = YOUR_TEAM_ID

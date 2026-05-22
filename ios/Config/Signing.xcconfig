@@ -1,0 +1,4 @@
+// Committed signing config. Your personal Apple Team ID stays out of git:
+// copy Local.xcconfig.example to Local.xcconfig and fill in DEVELOPMENT_TEAM.
+// The optional include below is silently skipped if that file is absent.
+#include? "Local.xcconfig"

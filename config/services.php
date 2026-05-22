@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'apple' => [
+        // Apple App ID prefix + bundle id (e.g. ABCDE12345.com.example.app)
+        // used in the apple-app-site-association file for password autofill.
+        'app_id' => env('APPLE_APP_ID'),
+    ],
+
 ];

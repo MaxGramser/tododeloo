@@ -15,6 +15,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
 
+// Lets iOS link this domain's saved iCloud Keychain passwords to the Tododeloo
+// app, so they autofill on the app's login screen (Associated Domains).
+// The app id (TEAMID.bundleid) comes from the APPLE_APP_ID env var.
+Route::get('.well-known/apple-app-site-association', function () {
+    return response()->json([
+        'webcredentials' => [
+            'apps' => array_values(array_filter([config('services.apple.app_id')])),
+        ],
+    ]);
+})->name('apple-app-site-association');
+
 if (! app()->environment('production')) {
     Route::post('__dev/quick-login', DevQuickLoginController::class)->name('dev.quick-login');
 }
