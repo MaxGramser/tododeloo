@@ -75,8 +75,9 @@ struct Recurrence: Codable, Hashable, Identifiable {
     let active: Bool
     /// Key of the matching preset, or nil for a custom rule.
     let preset: String?
-    /// Readable Dutch description, e.g. "Elke werkdag".
-    let summary: String
+    /// Readable Dutch description, e.g. "Elke werkdag". Optional so the app still
+    /// decodes against a backend that predates this field (e.g. production).
+    let summary: String?
 }
 
 /// How a list orders its todos. Mirrors the server's sort_mode enum.
