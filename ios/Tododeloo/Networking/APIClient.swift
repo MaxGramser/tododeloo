@@ -208,8 +208,10 @@ final class APIClient {
     }
 
     @discardableResult
-    func quickAdd(title: String) async throws -> QuickAddResponse {
-        try await send(.post, "quick-add", body: ["title": title])
+    func quickAdd(title: String, listId: Int? = nil) async throws -> QuickAddResponse {
+        var body: [String: Any] = ["title": title]
+        if let listId { body["list_id"] = listId }
+        return try await send(.post, "quick-add", body: body)
     }
 
     // MARK: - Sub-todos

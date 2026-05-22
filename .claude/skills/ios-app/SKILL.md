@@ -7,8 +7,15 @@ metadata:
 
 # Tododeloo iOS app
 
-Native SwiftUI client in `ios/` (iOS 17+, also runnable on Mac). Talks to the
-Laravel JSON API with Sanctum bearer tokens; defaults to the production URL.
+Native SwiftUI clients in `ios/`: the **iPhone app** (`Tododeloo` target, iOS 17+)
+and a separate **native macOS app** (`TododelooMac` target, macOS 14+). Both talk
+to the Laravel JSON API with Sanctum bearer tokens; default to the production URL.
+
+The two share a **core** (Models / Networking / State / Support, all under
+`ios/Tododeloo/`) and have **separate UI files** per platform — the iPhone UI lives
+in `ios/Tododeloo/Views/`, the Mac UI in `ios/TododelooMac/`. The shared core is
+cross-platform (UIKit usage gated with `#if canImport(UIKit)`). Pattern copied from
+the sibling `tuneflow` project (shared core + per-platform UI).
 
 ## Deploy to a physical iPhone (reliable, one command)
 
@@ -31,14 +38,39 @@ cd ios && xcodebuild build -scheme Tododeloo -sdk iphonesimulator \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
 
+## Native macOS app (`TododelooMac`)
+
+Separate native target — NOT Mac Catalyst. Three-column `NavigationSplitView`
+(sidebar · todo list · detail inspector), bundle id `com.tododeloo.mac`,
+`SUPPORTED_PLATFORMS = macosx`, own entitlements `ios/TododelooMac/TododelooMac.entitlements`
+(non-sandboxed for dev). UI files live in `ios/TododelooMac/`.
+
+```bash
+# Build + run on this Mac:
+cd ios && xcodebuild -scheme TododelooMac -destination 'platform=macOS,arch=arm64' \
+  -derivedDataPath /tmp/tododeloo-macnative -allowProvisioningUpdates build
+open /tmp/tododeloo-macnative/Build/Products/Debug/TododelooMac.app
+# Compile-only check: add CODE_SIGNING_ALLOWED=NO
+# Package a signed DMG (Developer ID): ./build-mac-dmg.sh   (NOTARY_PROFILE=… to notarize)
+```
+
+The target was added with the **`xcodeproj` Ruby gem** (`ios/add-mac-target.rb`,
+idempotent). The system gem (1.25) can't open objectVersion-77 projects — install
+1.27+ user-side: `gem install --user-install xcodeproj` then run with
+`GEM_PATH="$(ruby -e 'print Gem.user_dir'):$(gem env gemdir)"`. The Mac target uses
+**explicit file references** to the shared core files + its own `TododelooMac/` UI;
+the iOS synchronized group is untouched.
+
 ## Project facts & gotchas
 
-- **Mac Catalyst is intentionally OFF** (`SUPPORTS_MACCATALYST` absent,
-  `TARGETED_DEVICE_FAMILY = "1,2"`). If re-enabled, Xcode auto-selects
-  "My Mac" as the run target and the iPhone never gets installed. Leave it off.
+- **Mac Catalyst is intentionally OFF** on the iPhone target (`SUPPORTS_MACCATALYST`
+  absent). The Mac is served by the separate native `TododelooMac` target instead —
+  do NOT enable Catalyst on the iPhone target (Xcode then auto-selects "My Mac" and
+  the iPhone never gets installed).
 - **File-system-synchronized groups** (objectVersion 77): new Swift files placed
-  under `ios/Tododeloo/` are included automatically — do NOT hand-edit
-  `project.pbxproj` just to add sources.
+  under `ios/Tododeloo/` are auto-included in the iPhone target. New files under
+  `ios/TododelooMac/` (or new shared files the Mac target must compile) are NOT
+  auto-added to the Mac target — add them to `add-mac-target.rb` and re-run it.
 - **Team ID is local-only**: `ios/Config/Local.xcconfig` (git-ignored) holds
   `DEVELOPMENT_TEAM`, loaded via `Config/Signing.xcconfig`. On a fresh clone:
   `cp ios/Config/Local.xcconfig.example ios/Config/Local.xcconfig` and set the

@@ -17,7 +17,7 @@ function submit() {
     submitting.value = true;
     router.post(
         '/quick-add',
-        { title: title.value.trim() },
+        { title: title.value.trim(), list_id: target.value.listId },
         {
             preserveScroll: true,
             preserveState: true,

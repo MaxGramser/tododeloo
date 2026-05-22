@@ -136,8 +136,16 @@ final class BoardModel {
                     preScheduled = response.preScheduled
                     listId = response.list?.id
                     todos = []
+                } else if let list = response.list {
+                    apply(list)
                 } else {
-                    apply(response.list)
+                    // No daily list exists for this date yet — show an empty
+                    // board instead of leaving the previous day's todos behind.
+                    listId = nil
+                    listType = "daily"
+                    listName = ""
+                    sortMode = .manual
+                    todos = []
                 }
             case .master:
                 apply(try await api.master())
@@ -178,17 +186,20 @@ final class BoardModel {
         let title = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
         quickAddText = ""
+
+        // Show it instantly; the reload below reconciles with the server's row.
+        let draft = Todo.draft(title: title)
+        todos.insert(draft, at: 0)
+
         do {
-            switch context {
-            case .today:
-                _ = try await api.quickAdd(title: title)
-            case .master:
-                _ = try await api.createTodo(title: title)
-            case .custom(let id):
-                _ = try await api.createTodo(title: title, listId: id)
-            }
+            // Always go through quick-add so the Dutch date/recurrence parsing
+            // runs. Passing the current list makes a date-less todo land on the
+            // page you're on (today / master / this custom list); an explicit
+            // date or recurrence in the text still wins.
+            _ = try await api.quickAdd(title: title, listId: listId)
             await load()
         } catch {
+            todos.removeAll { $0.id == draft.id }
             handle(error)
         }
     }
@@ -317,18 +328,27 @@ final class BoardModel {
     func rename(_ todo: Todo, title: String) async {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        if let index = todos.firstIndex(where: { $0.id == todo.id }) {
+            todos[index].title = trimmed
+        }
         do {
             replace(try await api.updateTodo(todo.id, title: trimmed))
         } catch {
             handle(error)
+            await load()
         }
     }
 
     func setPriority(_ todo: Todo, _ priority: Priority) async {
+        if let index = todos.firstIndex(where: { $0.id == todo.id }) {
+            todos[index].priority = priority.rawValue
+            todos = sorted(todos)
+        }
         do {
             replace(try await api.updateTodo(todo.id, priority: priority.rawValue))
         } catch {
             handle(error)
+            await load()
         }
     }
 

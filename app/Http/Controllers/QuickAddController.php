@@ -12,9 +12,14 @@ class QuickAddController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'list_id' => ['nullable', 'integer'],
         ]);
 
-        $quickAdd($request->user(), $validated['title']);
+        $contextList = isset($validated['list_id'])
+            ? $request->user()->lists()->find($validated['list_id'])
+            : null;
+
+        $quickAdd($request->user(), $validated['title'], $contextList);
 
         return back();
     }

@@ -6,19 +6,112 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0819FB09F54CC557D4F1963E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62D63FE10ED7841C93C54978 /* Cocoa.framework */; };
+		0EC56484E4478EB225248739 /* MacInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D7FBC1AE7A410F198DDA47 /* MacInspectorView.swift */; };
+		0F5DD2A7F0A4E259FFBF1051 /* MacRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 740AE7C723DDDB9A45C0BEBA /* MacRootView.swift */; };
+		0FE4D075D495259455053DC1 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C874FC6E0B84FEB96C416B7 /* APIError.swift */; };
+		10C9F9F2555C9A8B52953115 /* MacSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F67416AA2E927A9E9AAA919 /* MacSidebar.swift */; };
+		16E8862C3E23101CCAF5B6E4 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0900E8502DA724B2769D376 /* MacContentView.swift */; };
+		25F48D57E21C3C7267733A5B /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8E0488D00DD3DEA4A2DC17 /* AppConfig.swift */; };
+		338AC897D67F87AB33C90832 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73B500E769D22740355C58D2 /* Models.swift */; };
+		3B7389F30A5841F3CEC8F4FC /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62D63FE10ED7841C93C54978 /* Cocoa.framework */; };
+		44D32B6B8087246AE9DA7EB2 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0EB9A4973CEE7C0293B37B /* Keychain.swift */; };
+		471FC4AD950235B4C769B11E /* TododelooMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2938BF5DDB73D00F53D8C4FE /* TododelooMacApp.swift */; };
+		50D49925DE7C957898E6A3CE /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C42CFBC5FB3F8ABF94D62B0 /* Theme.swift */; };
+		5464873EA6669FC950DD6441 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 971D55B96FDE5121D801764D /* APIClient.swift */; };
+		5AC163B2A2E06853990567DA /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958FA64DA9359F368C687366 /* APIClient.swift */; };
+		5DFAFEB2668A470583F117E4 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1B22B3B99FBF616A3B19C4 /* AppConfig.swift */; };
+		631D106536F95D40C90C7D9E /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD07AF80610C671159E386D3 /* Theme.swift */; };
+		66AA6253F16DA53F738ADCB4 /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4EF7F3E1F4A5DE304B89A /* APIError.swift */; };
+		66BC4DA3CA62D85B28689D85 /* MacSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B397C864EDB4DA676D799F59 /* MacSettingsView.swift */; };
+		6DCDE0F0CC29F988BEEDBA50 /* MacLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA80DE5BE34D89E7C75D0A0 /* MacLoginView.swift */; };
+		70716806858EFB02A3AE9D88 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16F3FB1F581E0423212CAED3 /* Session.swift */; };
+		7DFDBDBB2D6EC954920087C0 /* MacTodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309FA1A26A61C17671A902F2 /* MacTodoListView.swift */; };
+		82683C1E40FA62121844B7C4 /* MacSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0668E03ACE3880E67F2D4155 /* MacSettingsView.swift */; };
+		833A47F04CBBD8305178777F /* MacRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 464AA3FCD5B3096F7E2CC19A /* MacRootView.swift */; };
+		87C275C7B3BDB7F01803D4CB /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF673D6A0F085C044F5F898 /* Keychain.swift */; };
+		89C1CCB49E9E42442E7C0345 /* MacContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539CF514309C20EF12B74F45 /* MacContentView.swift */; };
+		8A41A0359296BBEBE89D3C47 /* ListsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4CE58BB4973BE7D1630FFA /* ListsModel.swift */; };
+		97E92181A8FF42816DC0C4E3 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6540671192BB9A16BD896E8D /* Components.swift */; };
+		9C9C5E53FB0316F05B26803A /* ListsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88642BF87F738B31418976BC /* ListsModel.swift */; };
+		9CB29357DAF0318EFFC4EFA8 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B94FE140D169CE9772C55094 /* Models.swift */; };
+		9D06B5CC4350F44A5099B396 /* MacLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00184F16369C31D70A2CE2AD /* MacLoginView.swift */; };
+		B59EA171C7CC27834DFC9733 /* BoardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C897A215892BF12B3537E6 /* BoardModel.swift */; };
+		BB3A09FA64BA7EE91BE64954 /* MacTodoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E51438D50A09694BE9AD3B40 /* MacTodoListView.swift */; };
+		C63FCD3B8A0CEC09C8171CA2 /* TododelooMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC309F3146CE485AD1C3D27 /* TododelooMacApp.swift */; };
+		D6356DC9BDB13228DB1095B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 457D62B4081380AA8E92131C /* Assets.xcassets */; };
+		D98FD65F38631E914B2F26E6 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2EEF9A3EB640ECF9868C6 /* Session.swift */; };
+		DA3C65F1D99173DADE1AAA0F /* BoardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4305FC0E7214E4C0B0ABF6F6 /* BoardModel.swift */; };
+		DEC181C72749A84001D201FF /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BDD3D9C0F57497680312634 /* Components.swift */; };
+		EC6DA3C55936F7C344AA1C83 /* MacSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5872E937B0AE0151634F36C2 /* MacSidebar.swift */; };
+		F0169601C7878A977A2C7F46 /* MacInspectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6793FFF209EA70EFEF913F91 /* MacInspectorView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		7A0000000000000000000010 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Config/Signing.xcconfig"; sourceTree = SOURCE_ROOT; };
+		00184F16369C31D70A2CE2AD /* MacLoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacLoginView.swift; path = TododelooMac/MacLoginView.swift; sourceTree = "<group>"; };
+		0668E03ACE3880E67F2D4155 /* MacSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacSettingsView.swift; path = TododelooMac/MacSettingsView.swift; sourceTree = "<group>"; };
+		0D4CE58BB4973BE7D1630FFA /* ListsModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ListsModel.swift; path = Tododeloo/State/ListsModel.swift; sourceTree = "<group>"; };
+		0E8E0488D00DD3DEA4A2DC17 /* AppConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppConfig.swift; path = Tododeloo/Support/AppConfig.swift; sourceTree = "<group>"; };
+		16F3FB1F581E0423212CAED3 /* Session.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Session.swift; path = Tododeloo/State/Session.swift; sourceTree = "<group>"; };
+		2938BF5DDB73D00F53D8C4FE /* TododelooMacApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TododelooMacApp.swift; path = TododelooMac/TododelooMacApp.swift; sourceTree = "<group>"; };
+		2BC309F3146CE485AD1C3D27 /* TododelooMacApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TododelooMacApp.swift; path = TododelooMac/TododelooMacApp.swift; sourceTree = "<group>"; };
+		309FA1A26A61C17671A902F2 /* MacTodoListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacTodoListView.swift; path = TododelooMac/MacTodoListView.swift; sourceTree = "<group>"; };
+		32D7FBC1AE7A410F198DDA47 /* MacInspectorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacInspectorView.swift; path = TododelooMac/MacInspectorView.swift; sourceTree = "<group>"; };
+		4305FC0E7214E4C0B0ABF6F6 /* BoardModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BoardModel.swift; path = Tododeloo/State/BoardModel.swift; sourceTree = "<group>"; };
+		457D62B4081380AA8E92131C /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = TododelooMac/Assets.xcassets; sourceTree = "<group>"; };
+		464AA3FCD5B3096F7E2CC19A /* MacRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacRootView.swift; path = TododelooMac/MacRootView.swift; sourceTree = "<group>"; };
+		4B1B22B3B99FBF616A3B19C4 /* AppConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AppConfig.swift; path = Tododeloo/Support/AppConfig.swift; sourceTree = "<group>"; };
+		4C42CFBC5FB3F8ABF94D62B0 /* Theme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = Tododeloo/Support/Theme.swift; sourceTree = "<group>"; };
+		4C874FC6E0B84FEB96C416B7 /* APIError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = APIError.swift; path = Tododeloo/Networking/APIError.swift; sourceTree = "<group>"; };
+		539CF514309C20EF12B74F45 /* MacContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacContentView.swift; path = TododelooMac/MacContentView.swift; sourceTree = "<group>"; };
+		5872E937B0AE0151634F36C2 /* MacSidebar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacSidebar.swift; path = TododelooMac/MacSidebar.swift; sourceTree = "<group>"; };
+		5BDD3D9C0F57497680312634 /* Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Components.swift; path = Tododeloo/Views/Components.swift; sourceTree = "<group>"; };
+		60F0202CE1F31F2E74BE3793 /* TododelooMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TododelooMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62D63FE10ED7841C93C54978 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		6540671192BB9A16BD896E8D /* Components.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Components.swift; path = Tododeloo/Views/Components.swift; sourceTree = "<group>"; };
+		6793FFF209EA70EFEF913F91 /* MacInspectorView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacInspectorView.swift; path = TododelooMac/MacInspectorView.swift; sourceTree = "<group>"; };
+		6F67416AA2E927A9E9AAA919 /* MacSidebar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacSidebar.swift; path = TododelooMac/MacSidebar.swift; sourceTree = "<group>"; };
+		73B500E769D22740355C58D2 /* Models.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Models.swift; path = Tododeloo/Models/Models.swift; sourceTree = "<group>"; };
+		740AE7C723DDDB9A45C0BEBA /* MacRootView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacRootView.swift; path = TododelooMac/MacRootView.swift; sourceTree = "<group>"; };
+		79C4EF7F3E1F4A5DE304B89A /* APIError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = APIError.swift; path = Tododeloo/Networking/APIError.swift; sourceTree = "<group>"; };
+		7A0000000000000000000010 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Signing.xcconfig; sourceTree = SOURCE_ROOT; };
+		7AA80DE5BE34D89E7C75D0A0 /* MacLoginView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacLoginView.swift; path = TododelooMac/MacLoginView.swift; sourceTree = "<group>"; };
+		88642BF87F738B31418976BC /* ListsModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ListsModel.swift; path = Tododeloo/State/ListsModel.swift; sourceTree = "<group>"; };
+		8C0EB9A4973CEE7C0293B37B /* Keychain.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Keychain.swift; path = Tododeloo/Networking/Keychain.swift; sourceTree = "<group>"; };
+		958FA64DA9359F368C687366 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = APIClient.swift; path = Tododeloo/Networking/APIClient.swift; sourceTree = "<group>"; };
+		971D55B96FDE5121D801764D /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = APIClient.swift; path = Tododeloo/Networking/APIClient.swift; sourceTree = "<group>"; };
+		A42810D1FCFDD8795201887D /* TododelooMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TododelooMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1C2EEF9A3EB640ECF9868C6 /* Session.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Session.swift; path = Tododeloo/State/Session.swift; sourceTree = "<group>"; };
+		B397C864EDB4DA676D799F59 /* MacSettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacSettingsView.swift; path = TododelooMac/MacSettingsView.swift; sourceTree = "<group>"; };
+		B94FE140D169CE9772C55094 /* Models.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Models.swift; path = Tododeloo/Models/Models.swift; sourceTree = "<group>"; };
+		CD07AF80610C671159E386D3 /* Theme.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Theme.swift; path = Tododeloo/Support/Theme.swift; sourceTree = "<group>"; };
+		D0900E8502DA724B2769D376 /* MacContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacContentView.swift; path = TododelooMac/MacContentView.swift; sourceTree = "<group>"; };
+		D6C897A215892BF12B3537E6 /* BoardModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BoardModel.swift; path = Tododeloo/State/BoardModel.swift; sourceTree = "<group>"; };
+		E51438D50A09694BE9AD3B40 /* MacTodoListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacTodoListView.swift; path = TododelooMac/MacTodoListView.swift; sourceTree = "<group>"; };
+		EFF673D6A0F085C044F5F898 /* Keychain.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Keychain.swift; path = Tododeloo/Networking/Keychain.swift; sourceTree = "<group>"; };
+		F86146B7D4F5F43C160536C4 /* TododelooMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TododelooMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7A0000000000000000000005 /* Tododeloo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = Tododeloo;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0577C452F061C7AAD791D71F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0819FB09F54CC557D4F1963E /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7A0000000000000000000008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -29,20 +122,67 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		37346927E4C56F512937BD91 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				62D63FE10ED7841C93C54978 /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		412A3AB6FA5699BF00AF116B /* MacSources */ = {
+			isa = PBXGroup;
+			children = (
+				B94FE140D169CE9772C55094 /* Models.swift */,
+				971D55B96FDE5121D801764D /* APIClient.swift */,
+				79C4EF7F3E1F4A5DE304B89A /* APIError.swift */,
+				8C0EB9A4973CEE7C0293B37B /* Keychain.swift */,
+				B1C2EEF9A3EB640ECF9868C6 /* Session.swift */,
+				4305FC0E7214E4C0B0ABF6F6 /* BoardModel.swift */,
+				88642BF87F738B31418976BC /* ListsModel.swift */,
+				0E8E0488D00DD3DEA4A2DC17 /* AppConfig.swift */,
+				CD07AF80610C671159E386D3 /* Theme.swift */,
+				5BDD3D9C0F57497680312634 /* Components.swift */,
+				D0900E8502DA724B2769D376 /* MacContentView.swift */,
+				6793FFF209EA70EFEF913F91 /* MacInspectorView.swift */,
+				7AA80DE5BE34D89E7C75D0A0 /* MacLoginView.swift */,
+				464AA3FCD5B3096F7E2CC19A /* MacRootView.swift */,
+				0668E03ACE3880E67F2D4155 /* MacSettingsView.swift */,
+				5872E937B0AE0151634F36C2 /* MacSidebar.swift */,
+				309FA1A26A61C17671A902F2 /* MacTodoListView.swift */,
+				2BC309F3146CE485AD1C3D27 /* TododelooMacApp.swift */,
+				457D62B4081380AA8E92131C /* Assets.xcassets */,
+			);
+			name = MacSources;
+			sourceTree = "<group>";
+		};
 		7A0000000000000000000002 = {
 			isa = PBXGroup;
 			children = (
 				7A0000000000000000000010 /* Signing.xcconfig */,
 				7A0000000000000000000005 /* Tododeloo */,
 				7A0000000000000000000003 /* Products */,
+				7D0B0109065FB596360FC926 /* Frameworks */,
+				412A3AB6FA5699BF00AF116B /* MacSources */,
 			);
 			sourceTree = "<group>";
 		};
 		7A0000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				60F0202CE1F31F2E74BE3793 /* TododelooMac.app */,
+				A42810D1FCFDD8795201887D /* TododelooMac.app */,
+				F86146B7D4F5F43C160536C4 /* TododelooMac.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		7D0B0109065FB596360FC926 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				37346927E4C56F512937BD91 /* OS X */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +205,23 @@
 			);
 			name = Tododeloo;
 			productName = Tododeloo;
+			productType = "com.apple.product-type.application";
+		};
+		D23681B968BC6B8272D712B0 /* TododelooMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8BD1148870065D09538BD0FE /* Build configuration list for PBXNativeTarget "TododelooMac" */;
+			buildPhases = (
+				EB962EC93F75B27AB29A6934 /* Sources */,
+				0577C452F061C7AAD791D71F /* Frameworks */,
+				FFA0DA5294375E957206B01B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TododelooMac;
+			productName = TododelooMac;
+			productReference = F86146B7D4F5F43C160536C4 /* TododelooMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -97,6 +254,7 @@
 			projectRoot = "";
 			targets = (
 				7A0000000000000000000006 /* Tododeloo */,
+				D23681B968BC6B8272D712B0 /* TododelooMac */,
 			);
 		};
 /* End PBXProject section */
@@ -106,6 +264,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FFA0DA5294375E957206B01B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D6356DC9BDB13228DB1095B7 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,9 +285,121 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EB962EC93F75B27AB29A6934 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9CB29357DAF0318EFFC4EFA8 /* Models.swift in Sources */,
+				5464873EA6669FC950DD6441 /* APIClient.swift in Sources */,
+				66AA6253F16DA53F738ADCB4 /* APIError.swift in Sources */,
+				44D32B6B8087246AE9DA7EB2 /* Keychain.swift in Sources */,
+				D98FD65F38631E914B2F26E6 /* Session.swift in Sources */,
+				DA3C65F1D99173DADE1AAA0F /* BoardModel.swift in Sources */,
+				9C9C5E53FB0316F05B26803A /* ListsModel.swift in Sources */,
+				25F48D57E21C3C7267733A5B /* AppConfig.swift in Sources */,
+				631D106536F95D40C90C7D9E /* Theme.swift in Sources */,
+				DEC181C72749A84001D201FF /* Components.swift in Sources */,
+				16E8862C3E23101CCAF5B6E4 /* MacContentView.swift in Sources */,
+				F0169601C7878A977A2C7F46 /* MacInspectorView.swift in Sources */,
+				6DCDE0F0CC29F988BEEDBA50 /* MacLoginView.swift in Sources */,
+				833A47F04CBBD8305178777F /* MacRootView.swift in Sources */,
+				82683C1E40FA62121844B7C4 /* MacSettingsView.swift in Sources */,
+				EC6DA3C55936F7C344AA1C83 /* MacSidebar.swift in Sources */,
+				7DFDBDBB2D6EC954920087C0 /* MacTodoListView.swift in Sources */,
+				C63FCD3B8A0CEC09C8171CA2 /* TododelooMacApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		0C67B89AE1339F441282D6F9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7A0000000000000000000010 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TododelooMac/TododelooMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tododeloo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tododeloo.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		3EDAB1414701B8C2769CCFE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7A0000000000000000000010 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TododelooMac/TododelooMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tododeloo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tododeloo.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5EA6A0D4C15E478CA0E8EAF2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7A0000000000000000000010 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TododelooMac/TododelooMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tododeloo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tododeloo.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		7A000000000000000000000B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -303,6 +581,35 @@
 			};
 			name = Release;
 		};
+		F4E6A04F70461A0DDE9839A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7A0000000000000000000010 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TododelooMac/TododelooMac.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Tododeloo;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tododeloo.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -320,6 +627,15 @@
 			buildConfigurations = (
 				7A000000000000000000000E /* Debug */,
 				7A000000000000000000000F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8BD1148870065D09538BD0FE /* Build configuration list for PBXNativeTarget "TododelooMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3EDAB1414701B8C2769CCFE7 /* Release */,
+				0C67B89AE1339F441282D6F9 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

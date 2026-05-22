@@ -67,6 +67,27 @@ struct Todo: Codable, Hashable, Identifiable {
 
     /// Custom/daily list memberships, excluding the implicit master list.
     var otherMemberships: [ListMembership] { listMemberships ?? [] }
+
+    /// A local placeholder shown instantly while the server creates the real
+    /// todo. Its negative id never collides with a server id.
+    static func draft(title: String) -> Todo {
+        Todo(
+            id: Int.random(in: Int.min ..< 0),
+            title: title,
+            description: nil,
+            priority: Priority.normal.rawValue,
+            completedAt: nil,
+            createdAt: Date(),
+            tags: [],
+            position: nil,
+            listMemberships: nil,
+            subTodos: [],
+            recurrenceId: nil,
+            recurrence: nil
+        )
+    }
+
+    var isDraft: Bool { id < 0 }
 }
 
 struct Recurrence: Codable, Hashable, Identifiable {
@@ -193,7 +214,7 @@ struct ListResponse: Codable { let list: TodoList }
 struct ListsResponse: Codable { let lists: [ListSummary] }
 struct TagResponse: Codable { let tag: Tag }
 struct TagsResponse: Codable { let tags: [Tag] }
-struct QuickAddResponse: Codable { let todo: Todo; let targetDate: String }
+struct QuickAddResponse: Codable { let todo: Todo; let targetDate: String? }
 
 struct TodayResponse: Codable {
     let date: String

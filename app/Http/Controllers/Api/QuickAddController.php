@@ -19,13 +19,18 @@ class QuickAddController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'list_id' => ['nullable', 'integer'],
         ]);
 
-        $result = $quickAdd($request->user(), $validated['title']);
+        $contextList = isset($validated['list_id'])
+            ? $request->user()->lists()->find($validated['list_id'])
+            : null;
+
+        $result = $quickAdd($request->user(), $validated['title'], $contextList);
 
         return [
             'todo' => TodoResource::make($result['todo']->load(['tags', 'lists', 'subTodos', 'recurrence']))->resolve(),
-            'target_date' => $result['target_date']->toDateString(),
+            'target_date' => $result['target_date']?->toDateString(),
         ];
     }
 }

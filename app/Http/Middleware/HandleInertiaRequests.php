@@ -74,6 +74,7 @@ class HandleInertiaRequests extends Middleware
         $upcoming = $user->lists()
             ->where('type', ListType::Daily)
             ->whereDate('date', '>', $today)
+            ->whereHas('todos')
             ->orderBy('date')
             ->limit(5)
             ->get();

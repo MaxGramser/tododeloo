@@ -1,11 +1,13 @@
 <?php
 
 use App\Actions\Lists\CreateCustomList;
+use App\Actions\Lists\EnsureMasterList;
 use App\Actions\Lists\GetOrCreateDailyList;
 use App\Actions\Todos\AddTodoToList;
 use App\Actions\Todos\CreateTodo;
 use App\Enums\Priority;
 use App\Enums\SortMode;
+use App\Models\Recurrence;
 use App\Models\Todo;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -181,6 +183,83 @@ it('quick-adds a todo to today on a weekday', function () {
     $today = $this->user->lists()->whereDate('date', '2026-05-20')->first();
     expect($today)->not->toBeNull()
         ->and($today->todos)->toHaveCount(1);
+
+    CarbonImmutable::setTestNow();
+});
+
+it('quick-adds to the current list (master) instead of today when given a context', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+    $master = app(EnsureMasterList::class)($this->user);
+
+    $this->post(route('quick-add'), ['title' => 'Begroting', 'list_id' => $master->id])->assertRedirect();
+
+    expect($this->user->lists()->whereDate('date', '2026-05-20')->exists())->toBeFalse()
+        ->and($master->fresh()->todos()->where('title', 'Begroting')->exists())->toBeTrue();
+
+    CarbonImmutable::setTestNow();
+});
+
+it('lets an explicit date in the quick-add text win over the page context', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+    $master = app(EnsureMasterList::class)($this->user);
+
+    $this->post(route('quick-add'), ['title' => 'morgen de auto wassen', 'list_id' => $master->id])->assertRedirect();
+
+    $tomorrow = $this->user->lists()->whereDate('date', '2026-05-21')->first();
+    expect($tomorrow)->not->toBeNull()
+        ->and($tomorrow->todos()->where('title', 'de auto wassen')->exists())->toBeTrue();
+
+    CarbonImmutable::setTestNow();
+});
+
+it('creates a recurrence straight from a quick-add phrase', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $this->post(route('quick-add'), ['title' => 'elke werkdag stand-up'])->assertRedirect();
+
+    $recurrence = Recurrence::firstWhere('user_id', $this->user->id);
+    expect($recurrence)->not->toBeNull()
+        ->and($recurrence->rrule)->toBe('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR')
+        ->and($this->user->todos()->where('title', 'stand-up')->exists())->toBeTrue();
+
+    CarbonImmutable::setTestNow();
+});
+
+it('lists upcoming days in the sidebar but skips days with no todos', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $withTodo = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 22));
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Toekomst']);
+    app(AddTodoToList::class)($todo, $withTodo);
+
+    // an empty future day (e.g. left behind after its todos were deleted) must not show
+    app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 23));
+
+    $this->get(route('master.show'))
+        ->assertOk()
+        ->assertInertia(
+            fn ($page) => $page
+                ->has('sidebarLists.upcomingDailies', 1)
+                ->where('sidebarLists.upcomingDailies.0.date', '2026-05-22'),
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
+it('drops a day from upcoming once its last todo is deleted', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $day = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 22));
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Verdwijnt']);
+    app(AddTodoToList::class)($todo, $day);
+
+    $this->get(route('master.show'))
+        ->assertInertia(fn ($page) => $page->has('sidebarLists.upcomingDailies', 1));
+
+    $this->delete(route('todos.destroy', $todo))->assertRedirect();
+
+    $this->get(route('master.show'))
+        ->assertInertia(fn ($page) => $page->has('sidebarLists.upcomingDailies', 0));
 
     CarbonImmutable::setTestNow();
 });

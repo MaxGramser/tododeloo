@@ -26,6 +26,21 @@ class Workday
     }
 
     /**
+     * Date of the next workday strictly after the given date.
+     * Friday → Monday. Mon-Thu → next day. Weekend → upcoming Monday.
+     */
+    public static function nextWorkdayAfter(DateTimeInterface $date): CarbonImmutable
+    {
+        $cursor = CarbonImmutable::instance($date)->startOfDay()->addDay();
+
+        while (! $cursor->isWeekday()) {
+            $cursor = $cursor->addDay();
+        }
+
+        return $cursor;
+    }
+
+    /**
      * Date of the last workday strictly before the given date.
      * Monday → Friday. Tuesday-Friday → previous day. Weekend → previous Friday.
      */

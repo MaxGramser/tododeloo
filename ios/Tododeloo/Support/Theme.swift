@@ -1,5 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// Editorial Swiss palette: off-white paper, black ink, a single orange accent.
 /// Adapts to dark mode so text stays legible in both appearances.
@@ -16,9 +20,16 @@ enum Theme {
 extension Color {
     /// A color that resolves differently in light and dark appearance.
     init(light: Color, dark: Color) {
+        #if canImport(UIKit)
         self = Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
         })
+        #elseif canImport(AppKit)
+        self = Color(nsColor: NSColor(name: nil) { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            return NSColor(isDark ? dark : light)
+        })
+        #endif
     }
 }
 

@@ -1,6 +1,8 @@
 import Observation
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// Authentication state for the app. Owns the current user and drives the
 /// root view between the login screen and the main UI.
@@ -69,7 +71,9 @@ final class Session {
     }
 
     static var deviceName: String {
-        #if targetEnvironment(macCatalyst)
+        #if os(macOS)
+        return Host.current().localizedName ?? "Mac"
+        #elseif targetEnvironment(macCatalyst)
         return "Mac"
         #else
         return UIDevice.current.name

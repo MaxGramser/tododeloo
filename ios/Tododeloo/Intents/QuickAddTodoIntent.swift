@@ -43,7 +43,10 @@ struct QuickAddTodoIntent: AppIntent {
         }
     }
 
-    private func confirmation(for title: String, on targetDate: String) -> String {
+    private func confirmation(for title: String, on targetDate: String?) -> String {
+        guard let targetDate else {
+            return "Toegevoegd: \(title)."
+        }
         if targetDate == DateText.ymd(Date()) {
             return "Toegevoegd voor vandaag: \(title)."
         }
