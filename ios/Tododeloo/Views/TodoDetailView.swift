@@ -144,6 +144,8 @@ struct TodoDetailView: View {
                     .foregroundStyle(Theme.accent)
                 TextField("Nieuwe tag…", text: $newTagName)
                     .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(Theme.ink)
+                    .tint(Theme.accent)
                     .submitLabel(.done)
                     .onSubmit { createTag() }
             }
@@ -186,6 +188,8 @@ struct TodoDetailView: View {
                     .foregroundStyle(Theme.accent)
                 TextField("Subtaak toevoegen…", text: $newSubTitle)
                     .font(.system(size: 16))
+                    .foregroundStyle(Theme.ink)
+                    .tint(Theme.accent)
                     .submitLabel(.done)
                     .onSubmit { addSub() }
             }

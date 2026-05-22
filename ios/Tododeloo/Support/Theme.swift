@@ -1,14 +1,25 @@
 import SwiftUI
+import UIKit
 
 /// Editorial Swiss palette: off-white paper, black ink, a single orange accent.
+/// Adapts to dark mode so text stays legible in both appearances.
 enum Theme {
-    static let background = Color(red: 0.96, green: 0.95, blue: 0.93)
-    static let surface = Color(red: 0.99, green: 0.985, blue: 0.97)
-    static let ink = Color.black
+    static let background = Color(light: Color(red: 0.96, green: 0.95, blue: 0.93), dark: Color(red: 0.07, green: 0.07, blue: 0.07))
+    static let surface = Color(light: Color(red: 0.99, green: 0.985, blue: 0.97), dark: Color(red: 0.13, green: 0.13, blue: 0.13))
+    static let ink = Color(light: .black, dark: Color(red: 0.93, green: 0.92, blue: 0.90))
     static let accent = Color(red: 0.949, green: 0.420, blue: 0.149)
-    static let muted = Color.black.opacity(0.45)
-    static let faint = Color.black.opacity(0.30)
-    static let hairline = Color.black.opacity(0.12)
+    static let muted = Color(light: .black.opacity(0.55), dark: .white.opacity(0.65))
+    static let faint = Color(light: .black.opacity(0.38), dark: .white.opacity(0.45))
+    static let hairline = Color(light: .black.opacity(0.12), dark: .white.opacity(0.16))
+}
+
+extension Color {
+    /// A color that resolves differently in light and dark appearance.
+    init(light: Color, dark: Color) {
+        self = Color(uiColor: UIColor { traits in
+            traits.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
+        })
+    }
 }
 
 extension Font {

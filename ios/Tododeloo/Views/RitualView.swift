@@ -126,6 +126,8 @@ struct RitualView: View {
                     .foregroundStyle(Theme.accent)
                 TextField("Iets nieuws…", text: $draft)
                     .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Theme.ink)
+                    .tint(Theme.accent)
                     .submitLabel(.done)
                     .onSubmit(addDraft)
             }
