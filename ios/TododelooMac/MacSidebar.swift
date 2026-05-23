@@ -59,6 +59,7 @@ struct MacSidebar: View {
     }
 
     private func commitRename(_ list: ListSummary) {
+        guard renamingListID == list.id else { return }
         let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
         renamingListID = nil
         guard !trimmed.isEmpty, trimmed != list.displayName else { return }
@@ -77,22 +78,29 @@ private struct SidebarListRow: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        Group {
+        // The icon lives in its own slot so it never disappears while editing —
+        // only the title swaps between a label and the rename field.
+        Label {
             if isRenaming {
                 TextField("", text: $renameText)
                     .textFieldStyle(.plain)
                     .focused($focused)
                     .onSubmit(onCommit)
                     .onExitCommand(perform: onCancel)
+                    .onChange(of: focused) { _, isFocused in
+                        // Clicking away commits, so editing never stays stuck.
+                        if !isFocused { onCommit() }
+                    }
                     .onAppear { focused = true }
             } else {
-                Label(list.displayName, systemImage: "list.bullet")
-                    .badge(list.openCount)
-                    // simultaneousGesture so the List's single-click selection
-                    // keeps working; a double-click starts an inline rename.
+                Text(list.displayName)
+                    // Double-click the name to rename; single click still selects.
                     .simultaneousGesture(TapGesture(count: 2).onEnded { onStartRename() })
             }
+        } icon: {
+            Image(systemName: "list.bullet")
         }
+        .badge(list.openCount)
         .contextMenu {
             Button("Hernoem", action: onStartRename)
             Button("Verwijder", role: .destructive, action: onDelete)

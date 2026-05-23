@@ -6,6 +6,8 @@ struct MacLoginView: View {
     @Environment(Session.self) private var session
     @State private var email = ""
     @State private var password = ""
+    @State private var showServer = false
+    @State private var serverURL = AppConfig.apiBaseURL.absoluteString
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
@@ -46,6 +48,33 @@ struct MacLoginView: View {
             .tint(Theme.ink)
             .keyboardShortcut(.return)
             .disabled(session.isWorking || email.isEmpty || password.isEmpty)
+
+            Button { showServer.toggle() } label: {
+                Text("Server instellen")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Theme.faint)
+            }
+            .buttonStyle(.plain)
+
+            if showServer {
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("https://tododeloo.test", text: $serverURL)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 300)
+                        .onSubmit { AppConfig.setBaseURL(serverURL) }
+                    HStack {
+                        Text("De API draait op deze host onder /api.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.muted)
+                        Spacer()
+                        Button("Bewaren") {
+                            AppConfig.setBaseURL(serverURL)
+                            showServer = false
+                        }
+                    }
+                    .frame(width: 300)
+                }
+            }
         }
         .padding(48)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

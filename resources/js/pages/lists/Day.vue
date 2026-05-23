@@ -261,14 +261,9 @@ const previousLabel = computed(() => {
                                 />
                             </svg>
                         </span>
-                        <span
-                            class="flex-1 text-sm transition-colors"
-                            :class="
-                                !selectedCarry.has(todo.id) &&
-                                'text-muted-foreground'
-                            "
-                            >{{ todo.title }}</span
-                        >
+                        <span class="flex-1 text-sm">{{
+                            todo.title
+                        }}</span>
                     </button>
                 </li>
             </ul>
@@ -322,14 +317,9 @@ const previousLabel = computed(() => {
                                 />
                             </svg>
                         </span>
-                        <span
-                            class="flex-1 text-sm transition-colors"
-                            :class="
-                                !selectedEarlier.has(todo.id) &&
-                                'text-muted-foreground'
-                            "
-                            >{{ todo.title }}</span
-                        >
+                        <span class="flex-1 text-sm">{{
+                            todo.title
+                        }}</span>
                     </button>
                 </li>
             </ul>
@@ -387,14 +377,9 @@ const previousLabel = computed(() => {
                                 />
                             </svg>
                         </span>
-                        <span
-                            class="flex-1 text-sm transition-colors"
-                            :class="
-                                !selectedFromMaster.has(todo.id) &&
-                                'text-muted-foreground'
-                            "
-                            >{{ todo.title }}</span
-                        >
+                        <span class="flex-1 text-sm">{{
+                            todo.title
+                        }}</span>
                     </button>
                 </li>
             </ul>

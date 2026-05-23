@@ -152,6 +152,27 @@ it('still shows the ritual today even when todos were pre-scheduled', function (
     CarbonImmutable::setTestNow();
 });
 
+it('never repeats a carry-over todo in the master bucket', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
+    $previous = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 19));
+    $carry = app(CreateTodo::class)($this->user, ['title' => 'Niet af gisteren']);
+    app(AddTodoToList::class)($carry, $previous);
+    app(CreateTodo::class)($this->user, ['title' => 'Alleen op master']);
+
+    $this->get(route('today.show'))
+        ->assertOk()
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('needsRitual', true)
+                ->has('carryOverCandidates', 1)
+                ->where('carryOverCandidates.0.title', 'Niet af gisteren')
+                ->has('masterOpenTodos', 1)
+                ->where('masterOpenTodos.0.title', 'Alleen op master'),
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
 it('start marks the day as started and carries selected todos plus new ones', function () {
     CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
     $previous = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 19));

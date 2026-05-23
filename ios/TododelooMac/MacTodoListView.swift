@@ -157,6 +157,7 @@ struct MacTodoListView: View {
     }
 
     private func commitRename(_ todo: Todo) {
+        guard renamingID == todo.id else { return }
         let trimmed = renameText.trimmingCharacters(in: .whitespacesAndNewlines)
         renamingID = nil
         guard !trimmed.isEmpty, trimmed != todo.title else { return }
@@ -182,25 +183,6 @@ struct MacTodoListView: View {
                 Button { Task { await model.shiftDay(by: 1) } } label: {
                     Image(systemName: "chevron.right")
                 }
-            }
-        }
-
-        ToolbarItem(placement: .principal) {
-            HStack(spacing: 6) {
-                Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                    .font(.system(size: 13))
-                TextField("Snel toevoegen…", text: $model.quickAddText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13, weight: .medium))
-                    .frame(minWidth: 240)
-                    .focused($quickAddFocused)
-                    .onSubmit {
-                        Task {
-                            await model.submitQuickAdd()
-                            quickAddFocused = true
-                        }
-                    }
             }
         }
 
@@ -286,6 +268,9 @@ struct MacTodoRow: View {
                         .focused($renameFocused)
                         .onSubmit(onCommitRename)
                         .onExitCommand(perform: onCancelRename)
+                        .onChange(of: renameFocused) { _, isFocused in
+                            if !isFocused { onCommitRename() }
+                        }
                         .onAppear { renameFocused = true }
                 } else {
                     Text(todo.title)
