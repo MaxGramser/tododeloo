@@ -3,6 +3,9 @@ import SwiftUI
 
 enum BoardContext: Hashable {
     case today
+    /// A specific dated daily list, opened from "Binnenkort". Reuses the whole
+    /// today board (rows, menus, day paging) anchored on that date.
+    case day(date: String)
     case master
     case custom(id: Int)
 }
@@ -51,9 +54,26 @@ final class BoardModel {
 
     private let api = APIClient.shared
     var onUnauthorized: (() -> Void)?
+    /// Fired after every load (including the reloads that follow a mutation), so
+    /// observers like the macOS "Binnenkort" sidebar can refresh alongside.
+    var onDidLoad: (() -> Void)?
 
     init(context: BoardContext) {
         self.context = context
+        // A day board starts anchored on its date; paging and quick-add then
+        // work exactly like the Today board viewing another day.
+        if case .day(let date) = context {
+            viewingDate = date
+        }
+    }
+
+    /// Today and a specific day both render the dated daily-list board, with day
+    /// paging in the header.
+    var isDayBoard: Bool {
+        switch context {
+        case .today, .day: return true
+        case .master, .custom: return false
+        }
     }
 
     var canRemoveFromList: Bool {
@@ -63,6 +83,7 @@ final class BoardModel {
     var title: String {
         switch context {
         case .today: return isViewingToday ? "Vandaag" : DateText.medium(effectiveDate)
+        case .day: return isViewingToday ? "Vandaag" : DateText.relative(effectiveDate)
         case .master: return "Alles"
         case .custom: return listName.isEmpty ? "Lijst" : listName
         }
@@ -121,10 +142,10 @@ final class BoardModel {
 
     func load() async {
         isLoading = true
-        defer { isLoading = false; hasLoaded = true }
+        defer { isLoading = false; hasLoaded = true; onDidLoad?() }
         do {
             switch context {
-            case .today:
+            case .today, .day:
                 let response = isViewingToday ? try await api.today() : try await api.day(effectiveDate)
                 dateString = response.date
                 needsRitual = response.needsRitual

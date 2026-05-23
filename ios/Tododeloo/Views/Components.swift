@@ -38,6 +38,12 @@ enum DateText {
         return formatter.string(from: date)
     }
 
+    /// ISO date `days` from today — `offset(1)` is tomorrow, `offset(7)` a week out.
+    static func offset(_ days: Int) -> String {
+        let date = Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: Date()) ?? Date()
+        return ymd(date)
+    }
+
     static func long(_ ymd: String) -> String {
         guard let date = parse(ymd) else { return ymd }
         let formatter = DateFormatter()
@@ -53,6 +59,24 @@ enum DateText {
         formatter.locale = Locale(identifier: "nl_NL")
         formatter.dateFormat = "EEE d MMM"
         return formatter.string(from: date).capitalized
+    }
+
+    /// "Vandaag" / "Morgen" / "Gisteren" when the date is near, else the medium
+    /// date ("Wo 27 mei"). Used to label when a todo becomes relevant.
+    static func relative(_ ymd: String) -> String {
+        guard let date = parse(ymd) else { return ymd }
+        let calendar = Calendar(identifier: .gregorian)
+        let days = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: Date()),
+            to: calendar.startOfDay(for: date)
+        ).day ?? 0
+        switch days {
+        case 0: return "Vandaag"
+        case 1: return "Morgen"
+        case -1: return "Gisteren"
+        default: return medium(ymd)
+        }
     }
 }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Recurrences\MaterializeRecurrences;
 use App\Actions\Todos\BuildRitualCandidates;
+use App\Actions\Todos\BuildUpcomingSchedule;
 use App\Actions\Todos\StartDay;
 use App\Enums\ListType;
 use App\Http\Controllers\Controller;
@@ -34,6 +35,21 @@ class DailyController extends Controller
     public function show(Request $request, string $date): array
     {
         return $this->payloadForDate($request, CarbonImmutable::parse($date));
+    }
+
+    /**
+     * The days ahead that already hold scheduled todos, oldest first, so the
+     * client can show when each todo becomes relevant.
+     *
+     * @return array<string, mixed>
+     */
+    public function upcoming(Request $request, BuildUpcomingSchedule $buildUpcomingSchedule): array
+    {
+        $days = $buildUpcomingSchedule($request->user());
+
+        return [
+            'days' => TodoListResource::collection($days)->resolve(),
+        ];
     }
 
     /**

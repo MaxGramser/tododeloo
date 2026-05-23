@@ -3,7 +3,9 @@
 use App\Actions\Lists\CreateCustomList;
 use App\Actions\Lists\GetOrCreateDailyList;
 use App\Actions\Todos\AddTodoToList;
+use App\Actions\Todos\CompleteTodo;
 use App\Actions\Todos\CreateTodo;
+use App\Actions\Todos\MoveTodoToDate;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Laravel\Sanctum\Sanctum;
@@ -112,6 +114,52 @@ it('adds and toggles sub-todos returning the parent todo', function () {
     $this->postJson(route('api.sub-todos.toggle', $subId))->assertOk();
 
     expect($todo->fresh()->subTodos->first()->isCompleted())->toBeTrue();
+});
+
+it('lists upcoming days with their scheduled todos, oldest first', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $later = app(CreateTodo::class)($this->user, ['title' => 'Tandarts']);
+    app(MoveTodoToDate::class)($later, CarbonImmutable::create(2026, 5, 27));
+
+    $sooner = app(CreateTodo::class)($this->user, ['title' => 'Belasting']);
+    app(MoveTodoToDate::class)($sooner, CarbonImmutable::create(2026, 5, 22));
+
+    // Today and the past must never show up in "upcoming".
+    $today = app(CreateTodo::class)($this->user, ['title' => 'Nu']);
+    app(MoveTodoToDate::class)($today, CarbonImmutable::create(2026, 5, 20));
+
+    $this->getJson(route('api.upcoming'))
+        ->assertOk()
+        ->assertJsonCount(2, 'days')
+        ->assertJsonPath('days.0.date', '2026-05-22')
+        ->assertJsonPath('days.0.todos.0.title', 'Belasting')
+        ->assertJsonPath('days.0.todos.0.scheduled_for', '2026-05-22')
+        ->assertJsonPath('days.1.date', '2026-05-27');
+
+    CarbonImmutable::setTestNow();
+});
+
+it('omits upcoming days whose todos are all done', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Af']);
+    app(MoveTodoToDate::class)($todo, CarbonImmutable::create(2026, 5, 24));
+    app(CompleteTodo::class)($todo);
+
+    $this->getJson(route('api.upcoming'))
+        ->assertOk()
+        ->assertJsonCount(0, 'days');
+
+    CarbonImmutable::setTestNow();
+});
+
+it('leaves scheduled_for null for an unscheduled master todo', function () {
+    app(CreateTodo::class)($this->user, ['title' => 'Ooit']);
+
+    $this->getJson(route('api.master'))
+        ->assertOk()
+        ->assertJsonPath('list.todos.0.scheduled_for', null);
 });
 
 it('creates and lists tags', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Actions\Todos\BuildUpcomingSchedule;
 use App\Enums\ListType;
 use App\Http\Resources\TagResource;
 use Carbon\CarbonImmutable;
@@ -71,13 +72,7 @@ class HandleInertiaRequests extends Middleware
             ->whereDate('date', $today)
             ->first();
 
-        $upcoming = $user->lists()
-            ->where('type', ListType::Daily)
-            ->whereDate('date', '>', $today)
-            ->whereHas('todos')
-            ->orderBy('date')
-            ->limit(5)
-            ->get();
+        $upcoming = app(BuildUpcomingSchedule::class)($user, $today, maxDays: 5, withTodos: false, onlyOpen: false);
 
         $customs = $user->lists()
             ->where('type', ListType::Custom)

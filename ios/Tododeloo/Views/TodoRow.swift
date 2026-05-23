@@ -4,6 +4,10 @@ import SwiftUI
 /// detail sheet, press-and-hold for the full action menu.
 struct TodoRow<MenuContent: View>: View {
     let todo: Todo
+    /// Show a calendar chip with the day the todo is scheduled on. Off on the
+    /// day boards (where the date is already the context) and the upcoming
+    /// agenda (grouped under a day header), on everywhere else it's useful.
+    var showsSchedule = false
     let onToggle: () -> Void
     let onOpen: () -> Void
     @ViewBuilder var menu: () -> MenuContent
@@ -43,15 +47,30 @@ struct TodoRow<MenuContent: View>: View {
     @ViewBuilder
     private var metadata: some View {
         let tags = todo.tags ?? []
-        let memberships = todo.otherMemberships
+        // The day-membership is surfaced as the schedule chip instead, so it's
+        // never doubled up in the membership list.
+        let memberships = todo.otherMemberships.filter { $0.type != "daily" }
+        let showsScheduleChip = showsSchedule && todo.scheduledFor != nil
         let hasMeta = !tags.isEmpty
             || todo.totalSubTodoCount > 0
             || !memberships.isEmpty
             || todo.priorityValue == .high
             || todo.isRecurring
+            || showsScheduleChip
 
         if hasMeta {
             HStack(spacing: 7) {
+                if let scheduled = todo.scheduledFor, showsSchedule {
+                    HStack(spacing: 4) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text(DateText.relative(scheduled).uppercased())
+                            .font(.mono(11, weight: .semibold))
+                            .tracking(1.4)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
                 if todo.priorityValue == .high {
                     MonoLabel("Hoog", color: Theme.accent)
                 }

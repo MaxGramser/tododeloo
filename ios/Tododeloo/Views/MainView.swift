@@ -15,6 +15,13 @@ struct MainView: View {
             .tabItem { Label("Vandaag", systemImage: "sun.max") }
 
             NavigationStack {
+                UpcomingView()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { settingsToolbar }
+            }
+            .tabItem { Label("Binnenkort", systemImage: "calendar") }
+
+            NavigationStack {
                 ListsView()
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { settingsToolbar }

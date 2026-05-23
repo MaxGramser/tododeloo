@@ -5,6 +5,7 @@ import SwiftUI
 /// inline on double-click (or via the context menu) and can be deleted.
 struct MacSidebar: View {
     let lists: ListsModel
+    let upcoming: UpcomingModel
     @Binding var selection: MacSection?
     let onNewList: () -> Void
 
@@ -19,6 +20,20 @@ struct MacSidebar: View {
                 Label("Alles", systemImage: "tray.full")
                     .badge(lists.master?.openCount ?? 0)
                     .tag(MacSection.master)
+            }
+
+            if !scheduledDays.isEmpty {
+                Section("Binnenkort") {
+                    ForEach(scheduledDays, id: \.id) { day in
+                        Label {
+                            Text(DateText.relative(day.date ?? ""))
+                        } icon: {
+                            Image(systemName: "calendar")
+                        }
+                        .badge((day.todos ?? []).filter { !$0.isCompleted }.count)
+                        .tag(MacSection.day(day.date ?? ""))
+                    }
+                }
             }
 
             if !lists.customLists.isEmpty {
@@ -51,6 +66,11 @@ struct MacSidebar: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
         }
+    }
+
+    /// Upcoming daily lists that actually carry a date and todos.
+    private var scheduledDays: [TodoList] {
+        upcoming.days.filter { $0.date != nil && !($0.todos ?? []).isEmpty }
     }
 
     private func startRename(_ list: ListSummary) {

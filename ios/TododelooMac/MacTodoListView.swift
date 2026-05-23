@@ -14,6 +14,7 @@ struct MacTodoListView: View {
     @State private var renamingID: Int?
     @State private var renameText = ""
     @State private var customRecurrenceTodo: Todo?
+    @State private var moveTarget: Todo?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +27,11 @@ struct MacTodoListView: View {
         .sheet(item: $customRecurrenceTodo) { todo in
             MacRecurrenceSheet(anchorISO: model.recurrenceAnchorISO) { rrule in
                 Task { await model.setCustomRecurrence(todo, rrule: rrule) }
+            }
+        }
+        .sheet(item: $moveTarget) { todo in
+            MacMoveDateSheet(initialISO: todo.scheduledFor) { date in
+                Task { await model.move(todo, toDate: date) }
             }
         }
     }
@@ -71,6 +77,7 @@ struct MacTodoListView: View {
                 MacTodoRow(
                     todo: todo,
                     isRenaming: renamingID == todo.id,
+                    showsSchedule: !model.isDayBoard,
                     renameText: $renameText,
                     onToggle: { Task { await model.toggle(todo) } },
                     onSelect: { selectedTodoID = todo.id },
@@ -87,6 +94,7 @@ struct MacTodoListView: View {
                         lists: lists,
                         todo: todo,
                         onRename: { startRename(todo) },
+                        onMove: { moveTarget = todo },
                         onCustomRecurrence: { customRecurrenceTodo = todo }
                     )
                 }
@@ -172,7 +180,7 @@ struct MacTodoListView: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        if model.context == .today {
+        if model.isDayBoard {
             ToolbarItemGroup(placement: .navigation) {
                 Button { Task { await model.shiftDay(by: -1) } } label: {
                     Image(systemName: "chevron.left")
@@ -247,6 +255,9 @@ struct MacTodoListView: View {
 struct MacTodoRow: View {
     let todo: Todo
     let isRenaming: Bool
+    /// Show a calendar chip with the day the todo is scheduled on. Off on the
+    /// day boards, where the date is already the context.
+    var showsSchedule = false
     @Binding var renameText: String
     let onToggle: () -> Void
     let onSelect: () -> Void
@@ -316,14 +327,27 @@ struct MacTodoRow: View {
     @ViewBuilder
     private var metadata: some View {
         let tags = todo.tags ?? []
+        // The day-membership is surfaced as the schedule chip instead.
+        let memberships = todo.otherMemberships.filter { $0.type != "daily" }
+        let showsScheduleChip = showsSchedule && todo.scheduledFor != nil
         let hasMeta = todo.priorityValue == .high
             || todo.isRecurring
             || !tags.isEmpty
             || todo.totalSubTodoCount > 0
-            || !todo.otherMemberships.isEmpty
+            || !memberships.isEmpty
+            || showsScheduleChip
 
         if hasMeta {
             HStack(spacing: 6) {
+                if let scheduled = todo.scheduledFor, showsSchedule {
+                    HStack(spacing: 3) {
+                        Image(systemName: "calendar").font(.system(size: 9, weight: .semibold))
+                        Text(DateText.relative(scheduled).uppercased())
+                            .font(.mono(10, weight: .semibold)).tracking(1)
+                    }
+                    .foregroundStyle(Theme.accent)
+                    .lineLimit(1)
+                }
                 if todo.priorityValue == .high {
                     MonoLabel("Hoog", color: Theme.accent)
                 }
@@ -341,7 +365,7 @@ struct MacTodoRow: View {
                 if todo.totalSubTodoCount > 0 {
                     MonoLabel("\(todo.doneSubTodoCount)/\(todo.totalSubTodoCount)")
                 }
-                ForEach(todo.otherMemberships) { membership in
+                ForEach(memberships) { membership in
                     MonoLabel(membership.label, color: Theme.faint)
                 }
             }
@@ -355,6 +379,7 @@ struct MacTodoMenu: View {
     let lists: ListsModel
     let todo: Todo
     let onRename: () -> Void
+    let onMove: () -> Void
     let onCustomRecurrence: () -> Void
 
     var body: some View {
@@ -367,6 +392,13 @@ struct MacTodoMenu: View {
         Button("Hernoem", action: onRename)
         if model.context != .today {
             Button("Naar vandaag") { Task { await model.addToToday(todo) } }
+        }
+
+        Menu("Verplaats naar") {
+            Button("Morgen") { Task { await model.move(todo, toDate: DateText.offset(1)) } }
+            Button("Over een week") { Task { await model.move(todo, toDate: DateText.offset(7)) } }
+            Divider()
+            Button("Kies datum…", action: onMove)
         }
 
         Menu("Prioriteit") {
@@ -420,6 +452,43 @@ struct MacTodoMenu: View {
     private var recurrenceTitle: String {
         if let summary = todo.recurrence?.summary { return "Herhaal · \(summary)" }
         return todo.isRecurring ? "Herhaal · aan" : "Herhaal"
+    }
+}
+
+/// A small sheet with a calendar to reschedule a todo to an exact date.
+/// Pre-selects the day the todo currently sits on, if any.
+struct MacMoveDateSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let initialISO: String?
+    let onPick: (String) -> Void
+    @State private var date: Date
+
+    init(initialISO: String?, onPick: @escaping (String) -> Void) {
+        self.initialISO = initialISO
+        self.onPick = onPick
+        _date = State(initialValue: initialISO.flatMap(DateText.parse) ?? Date())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Verplaats naar").font(.headline)
+            DatePicker("", selection: $date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .tint(Theme.accent)
+                .frame(width: 280)
+            HStack {
+                Spacer()
+                Button("Annuleer") { dismiss() }
+                Button("Verplaats") {
+                    onPick(DateText.ymd(date))
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(Theme.ink)
+            }
+        }
+        .padding(22)
     }
 }
 

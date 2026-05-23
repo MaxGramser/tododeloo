@@ -8,6 +8,7 @@ use App\Models\TodoList;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 /**
  * @mixin Todo
@@ -27,6 +28,7 @@ class TodoResource extends JsonResource
             'completed_at' => $this->completed_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'recurrence_id' => $this->recurrence_id,
+            'scheduled_for' => $this->whenLoaded('lists', fn () => self::scheduledDate($this->lists)),
             'recurrence' => $this->whenLoaded('recurrence', function () {
                 if ($this->recurrence === null) {
                     return null;
@@ -62,6 +64,19 @@ class TodoResource extends JsonResource
                 ])
                 ->all()),
         ];
+    }
+
+    /**
+     * The ISO date of the daily list this todo sits on (when it becomes
+     * relevant), or null if it isn't scheduled on any day.
+     *
+     * @param  Collection<int, TodoList>  $lists
+     */
+    private static function scheduledDate($lists): ?string
+    {
+        return $lists
+            ->first(fn (TodoList $l) => $l->type === ListType::Daily && $l->date !== null)
+            ?->date->toDateString();
     }
 
     private static function labelFor(TodoList $list): string

@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::get('me', [AuthController::class, 'me'])->name('me');
 
     Route::get('today', [DailyController::class, 'today'])->name('today');
+    Route::get('upcoming', [DailyController::class, 'upcoming'])->name('upcoming');
     Route::get('days/{date}', [DailyController::class, 'show'])
         ->where('date', '\d{4}-\d{2}-\d{2}')
         ->name('days.show');

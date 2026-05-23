@@ -60,6 +60,11 @@ final class APIClient {
 
     func day(_ date: String) async throws -> TodayResponse { try await send(.get, "days/\(date)") }
 
+    func upcoming() async throws -> [TodoList] {
+        let response: UpcomingResponse = try await send(.get, "upcoming")
+        return response.days
+    }
+
     func startDay(_ date: String, carryOverIds: [Int], newTitles: [String]) async throws -> TodoList {
         let response: ListResponse = try await send(.post, "days/\(date)/start", body: [
             "carry_over_ids": carryOverIds,

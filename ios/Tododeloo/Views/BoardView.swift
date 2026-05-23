@@ -17,7 +17,7 @@ struct BoardView: View {
                 if showsHeader {
                     header
                 }
-                if model.context == .today {
+                if model.isDayBoard {
                     dayNav
                 }
                 quickAddField
@@ -109,6 +109,8 @@ struct BoardView: View {
             return model.isViewingToday
                 ? (model.dateString.isEmpty ? "Vandaag" : DateText.long(model.dateString))
                 : "\(model.openCount) open"
+        case .day:
+            return model.dateString.isEmpty ? "\(model.openCount) open" : DateText.long(model.dateString)
         default:
             return "\(model.openCount) open"
         }
@@ -287,6 +289,7 @@ struct BoardView: View {
     private func row(for todo: Todo) -> some View {
         TodoRow(
             todo: todo,
+            showsSchedule: !model.isDayBoard,
             onToggle: { Task { await model.toggle(todo) } },
             onOpen: { sheet = .detail(todo) }
         ) {

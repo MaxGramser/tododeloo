@@ -55,6 +55,7 @@ shared = %w[
   Tododeloo/State/Session.swift
   Tododeloo/State/BoardModel.swift
   Tododeloo/State/ListsModel.swift
+  Tododeloo/State/UpcomingModel.swift
   Tododeloo/Support/AppConfig.swift
   Tododeloo/Support/Theme.swift
   Tododeloo/Views/Components.swift

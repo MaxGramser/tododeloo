@@ -58,6 +58,10 @@ struct Todo: Codable, Hashable, Identifiable {
     var subTodos: [SubTodo]?
     var recurrenceId: Int?
     var recurrence: Recurrence?
+    /// ISO `yyyy-MM-dd` of the day this todo is scheduled on (the daily list it
+    /// sits on), or nil when it isn't planned on any day. Tells the client when
+    /// the todo becomes relevant.
+    var scheduledFor: String?
 
     var isCompleted: Bool { completedAt != nil }
     var priorityValue: Priority { Priority(rawValue: priority) ?? .normal }
@@ -85,7 +89,8 @@ struct Todo: Codable, Hashable, Identifiable {
             listMemberships: nil,
             subTodos: [],
             recurrenceId: nil,
-            recurrence: nil
+            recurrence: nil,
+            scheduledFor: nil
         )
     }
 
@@ -230,6 +235,12 @@ struct QuickAddFeedback: Codable, Hashable {
     let message: String
     /// Where it landed, e.g. "ingepland voor volgende week dinsdag".
     let description: String?
+}
+
+/// The days ahead that hold scheduled todos, oldest first. Each day is a daily
+/// list carrying its own `date` and `todos`.
+struct UpcomingResponse: Codable {
+    let days: [TodoList]
 }
 
 struct TodayResponse: Codable {
