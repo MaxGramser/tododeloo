@@ -288,6 +288,13 @@ struct TodoDetailView: View {
     }
 
     private func toggleSub(_ sub: SubTodo) {
+        // Flip instantly and re-derive the parent's done-state the way the server
+        // does (done iff every sub is done), then reconcile with the response.
+        if let index = todo.subTodos?.firstIndex(where: { $0.id == sub.id }) {
+            todo.subTodos?[index].completedAt = sub.isCompleted ? nil : Date()
+            let hasOpenSub = (todo.subTodos ?? []).contains { !$0.isCompleted }
+            todo.completedAt = hasOpenSub ? nil : Date()
+        }
         update { try await api.toggleSubTodo(sub.id) }
     }
 

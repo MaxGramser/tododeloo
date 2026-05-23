@@ -376,6 +376,29 @@ final class BoardModel {
         }
     }
 
+    /// Toggle a sub-task with an optimistic flip. The parent's own done-state is
+    /// re-derived locally the same way the server does it (done iff every sub is
+    /// done), then reconciled with the server's response.
+    func toggleSubTodo(_ todo: Todo, _ sub: SubTodo) async {
+        guard let index = todos.firstIndex(where: { $0.id == todo.id }) else { return }
+
+        var updated = todos[index]
+        if let subIndex = updated.subTodos?.firstIndex(where: { $0.id == sub.id }) {
+            updated.subTodos?[subIndex].completedAt = sub.isCompleted ? nil : Date()
+        }
+        let hasOpenSub = (updated.subTodos ?? []).contains { !$0.isCompleted }
+        updated.completedAt = hasOpenSub ? nil : Date()
+        todos[index] = updated
+        todos = sorted(todos)
+
+        do {
+            replace(try await api.toggleSubTodo(sub.id))
+        } catch {
+            handle(error)
+            await load()
+        }
+    }
+
     // MARK: - Recurrence
 
     /// Anchor a new recurrence on the day being viewed; today for non-daily lists.

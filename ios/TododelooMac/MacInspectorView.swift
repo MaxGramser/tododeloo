@@ -36,6 +36,7 @@ private struct MacInspectorEditor: View {
     @State private var newSub = ""
     @State private var newTag = ""
     @State private var allTags: [Tag] = []
+    @State private var showCustomRecurrence = false
     @FocusState private var noteFocused: Bool
 
     private let api = APIClient.shared
@@ -75,6 +76,8 @@ private struct MacInspectorEditor: View {
                                 }
                             }
                         }
+                        Divider()
+                        Button("Aangepast…") { showCustomRecurrence = true }
                         if todo.isRecurring {
                             Divider()
                             Button("Stop herhaling", role: .destructive) { Task { await board.stopRecurrence(todo) } }
@@ -99,11 +102,26 @@ private struct MacInspectorEditor: View {
                 }
 
                 section("Tags") { tagsView }
-                section("Subtaken") { subtasksView }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        MonoLabel("Subtaken")
+                        if !(todo.subTodos ?? []).isEmpty {
+                            SubProgressRing(done: todo.doneSubTodoCount, total: todo.totalSubTodoCount, size: 15)
+                            MonoLabel("\(todo.doneSubTodoCount)/\(todo.totalSubTodoCount)")
+                        }
+                    }
+                    subtasksView
+                }
             }
             .padding(20)
         }
         .task { allTags = (try? await api.tags()) ?? [] }
+        .sheet(isPresented: $showCustomRecurrence) {
+            MacRecurrenceSheet(anchorISO: board.recurrenceAnchorISO) { rrule in
+                Task { await board.setCustomRecurrence(todo, rrule: rrule) }
+            }
+        }
     }
 
     // MARK: - Tags
@@ -218,10 +236,7 @@ private struct MacInspectorEditor: View {
     }
 
     private func toggleSub(_ sub: SubTodo) {
-        Task {
-            _ = try? await api.toggleSubTodo(sub.id)
-            await board.load()
-        }
+        Task { await board.toggleSubTodo(todo, sub) }
     }
 
     private func deleteSub(_ sub: SubTodo) {

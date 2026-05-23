@@ -10,8 +10,14 @@ struct TodoRow<MenuContent: View>: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            Button(action: onToggle) {
-                CompletionToggle(isCompleted: todo.isCompleted, priority: todo.priorityValue)
+            // A todo with sub-tasks can't be completed directly — tapping the
+            // ring opens it so you can finish the subs (mirrors the web).
+            Button(action: todo.hasSubTodos ? onOpen : onToggle) {
+                if todo.hasSubTodos {
+                    SubProgressRing(done: todo.doneSubTodoCount, total: todo.totalSubTodoCount, size: 24)
+                } else {
+                    CompletionToggle(isCompleted: todo.isCompleted, priority: todo.priorityValue)
+                }
             }
             .buttonStyle(.plain)
 
@@ -128,11 +134,13 @@ struct TodoMenu: View {
         Button(action: onOpen) {
             Label("Openen", systemImage: "square.and.pencil")
         }
-        Button(action: onToggle) {
-            Label(
-                todo.isCompleted ? "Markeer onaf" : "Markeer af",
-                systemImage: todo.isCompleted ? "circle" : "checkmark.circle"
-            )
+        if !todo.hasSubTodos {
+            Button(action: onToggle) {
+                Label(
+                    todo.isCompleted ? "Markeer onaf" : "Markeer af",
+                    systemImage: todo.isCompleted ? "circle" : "checkmark.circle"
+                )
+            }
         }
 
         if !isToday {

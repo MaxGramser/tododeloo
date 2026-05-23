@@ -260,3 +260,39 @@ extension View {
         modifier(ToastHostModifier())
     }
 }
+
+// MARK: - Sub-task progress
+
+/// A circular progress ring for a todo's sub-tasks. Mirrors the web's
+/// SubProgressRing: a faint track, an accent arc as they get done, and a filled
+/// accent disc with a check once they're all complete. Used in place of the
+/// completion toggle on a todo that has sub-tasks — you finish the subs, not the
+/// parent.
+struct SubProgressRing: View {
+    let done: Int
+    let total: Int
+    var size: CGFloat = 20
+
+    private var progress: Double { total == 0 ? 0 : Double(done) / Double(total) }
+    private var isComplete: Bool { done > 0 && done == total }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .strokeBorder(Theme.faint.opacity(0.55), lineWidth: 2)
+            if isComplete {
+                Circle().fill(Theme.accent)
+                Image(systemName: "checkmark")
+                    .font(.system(size: size * 0.46, weight: .bold))
+                    .foregroundStyle(Theme.background)
+            } else if progress > 0 {
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+        }
+        .frame(width: size, height: size)
+        .animation(.easeInOut(duration: 0.25), value: progress)
+    }
+}

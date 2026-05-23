@@ -1,6 +1,6 @@
 # Tododeloo
 
-Een todo-app voor mensen die gek worden van todos die uitgesmeerd zitten over losse lijstjes.
+Een open-source todo-app voor mensen die gek worden van todos die uitgesmeerd zitten over losse lijstjes. Beschikbaar als web-app, native iOS-app én native macOS-app — alle drie op dezelfde Laravel-backend.
 
 ## Waarom ik dit heb gebouwd
 
@@ -19,6 +19,14 @@ Apple Reminders heeft de UX-kwaliteit die ik wil (inline toevoegen, drag-and-dro
 **Apple Reminders-niveau interactie.** Inline toevoegen aan de onderkant van elke lijst (focus blijft staan voor de volgende). Drag-and-drop voor handmatige sortering. Done-items zakken automatisch naar onder, doorgestreept. Sort modes per lijst. Rechtermuisknop opent een rijk context-menu met submenus voor prioriteit, tags, datum verplaatsen, en lijst-koppeling.
 
 **Editoriële look, geen SaaS-dashboard.** Zware display-typografie + monospace labels + één sterk oranje accent + off-white achtergrond. Voelt eerder als een tijdschrift dan een productiviteit-tool.
+
+## Drie clients, één backend
+
+Tododeloo draait overal op dezelfde Laravel JSON-API. Geen aparte business logic per platform — alle mutaties lopen via dezelfde action classes.
+
+- **Web** — Laravel + Inertia v3 + Vue 3 + Tailwind 4. De volledige ervaring, inclusief ochtendritueel, quick-add en context-menu's.
+- **Native iOS** — een echte SwiftUI-app (`ios/`), geen webview. Login via Sanctum, alle acties via press-and-hold, plus Siri quick-add zodat je hands-free een todo dropt op vandaag.
+- **Native macOS** — native SwiftUI Mac-target met sidebar, todo-lijst en inspector, gebouwd als genotariseerde DMG.
 
 ## Wat het kan
 
@@ -47,9 +55,9 @@ Apple Reminders heeft de UX-kwaliteit die ik wil (inline toevoegen, drag-and-dro
 
 ## Tech & filosofie
 
-Laravel 13 + Inertia v3 + Vue 3 + Tailwind 4. PHP 8.4. SQLite voor dev.
+Backend: Laravel 13 + Inertia v3 + Vue 3 + Tailwind 4. PHP 8.4. SQLite voor dev. iOS- en Mac-app: native SwiftUI, geen webview, op Sanctum-auth.
 
-**Action classes, dunne controllers.** Elke mutatie zit in een single-purpose action class onder `app/Actions/`. Controllers valideren input en roepen de action aan, that's it. De reden: er komt later een iOS-app die diezelfde Laravel backend gebruikt via een JSON API. Geen dubbele business logic.
+**Action classes, dunne controllers.** Elke mutatie zit in een single-purpose action class onder `app/Actions/`. Controllers valideren input en roepen de action aan, that's it. Daardoor kunnen de web-app én de native iOS/Mac-apps precies dezelfde JSON-API delen zonder dubbele business logic.
 
 **Pest tests overal.** 90+ feature tests dekken model-relaties, soft-delete sync, workday-kalender, alle acties, en HTTP routes inclusief autorisatie.
 
@@ -63,9 +71,10 @@ Kort:
 - Keyboard navigation door de lijst
 
 Lang:
-- iOS-app (native, eet dezelfde backend via JSON API)
 - Gedeelde lijsten
 - Calendar integratie
+
+Af: native iOS- en macOS-apps draaien al op dezelfde backend.
 
 ## Lokaal draaien
 
@@ -80,8 +89,24 @@ composer run dev
 
 De app draait via Laravel Herd op `https://tododeloo.test`. Op de login-pagina zie je in local env een **Fast login (dev)** knop voor snelle iteratie — maakt zo nodig een dev-account aan en logt je meteen in.
 
+### iOS- en Mac-app
+
+De native apps staan in `ios/` (Xcode-project, SwiftUI). Ze praten met dezelfde backend via de JSON-API.
+
+```bash
+# iOS op een aangesloten iPhone
+./ios/deploy-iphone.sh
+
+# genotariseerde macOS-app (DMG + zip)
+NOTARY_PROFILE=tododeloo ./ios/build-mac-dmg.sh
+```
+
+## Open source
+
+Tododeloo is open source. Issues en pull requests zijn welkom — voor de backend (Laravel/Vue) net zo goed als voor de native iOS/Mac-clients.
+
 ## English summary
 
-Tododeloo is a personal todo app for people who get tired of todos scattered across separate lists. One master list as the single source of truth; daily and custom lists are references, not copies. Mark something done in your daily list and it's done in master too — no sync, no duplicates.
+Tododeloo is an open-source todo app for people who get tired of todos scattered across separate lists. One master list as the single source of truth; daily and custom lists are references, not copies. Mark something done in your daily list and it's done in master too — no sync, no duplicates.
 
-Workday-aware quick-add (weekend additions land on Monday), Apple Reminders-quality inline interactions, an opinionated morning ritual that asks what you're carrying over from yesterday, and an editorial Swiss-design aesthetic instead of the usual SaaS dashboard. Built with Laravel 13 + Inertia + Vue 3 with an action-class architecture so an iOS companion can share the same backend later.
+It runs everywhere on the same Laravel backend: a web app (Inertia + Vue 3), a native SwiftUI iOS app (with Siri quick-add), and a native macOS app. Workday-aware quick-add (weekend additions land on Monday), Apple Reminders-quality inline interactions, an opinionated morning ritual that asks what you're carrying over from yesterday, and an editorial Swiss-design aesthetic instead of the usual SaaS dashboard. Built with Laravel 13 + Inertia + Vue 3 on an action-class architecture so every client shares the same JSON API with zero duplicated business logic.

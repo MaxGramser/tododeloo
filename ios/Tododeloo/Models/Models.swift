@@ -63,6 +63,8 @@ struct Todo: Codable, Hashable, Identifiable {
     var priorityValue: Priority { Priority(rawValue: priority) ?? .normal }
     var openSubTodoCount: Int { (subTodos ?? []).filter { !$0.isCompleted }.count }
     var totalSubTodoCount: Int { (subTodos ?? []).count }
+    var doneSubTodoCount: Int { totalSubTodoCount - openSubTodoCount }
+    var hasSubTodos: Bool { totalSubTodoCount > 0 }
     var isRecurring: Bool { recurrenceId != nil }
 
     /// Custom/daily list memberships, excluding the implicit master list.
