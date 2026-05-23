@@ -111,10 +111,22 @@ class DutchDateParser
     {
         $this->currentKind = 'recurrence';
         $every = '(?:elke|iedere|elk|ieder|alle)';
+        $wd = self::WEEKDAY_RE;
+        // A "behalve maandag" / "behalve maandag en vrijdag" tail.
+        $except = '(?:\s+(?:behalve|niet\s+op|met\s+uitzondering\s+van)\s+(?:op\s+)?((?:'.$wd.')(?:(?:\s*,\s*|\s+en\s+)(?:'.$wd.'))*))?';
 
-        // Every workday.
-        if ($this->find($text, '/\b'.$every.'\s+werkdag(?:en)?\b/iu', $m) || $this->find($text, '/\bop\s+werkdagen\b/iu', $m)) {
-            return [$this->rec('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', Workday::quickAddTargetDate($today)), $this->cut($text, $m)];
+        // Every workday, optionally excluding days: "iedere werkdag behalve maandag".
+        if ($this->find($text, '/\b'.$every.'\s+werkdag(?:en)?'.$except.'\b/iu', $m) || $this->find($text, '/\bop\s+werkdagen\b/iu', $m)) {
+            $days = $this->withoutExcluded([1, 2, 3, 4, 5], $m[1][0] ?? '');
+
+            return [$this->rec('FREQ=WEEKLY;BYDAY='.$this->dayCodes($days), $this->nextDayIn($today, $days)), $this->cut($text, $m)];
+        }
+
+        // Every day except some weekdays: "elke dag behalve zondag".
+        if ($this->find($text, '/\b'.$every.'\s+dag\s+(?:behalve|niet\s+op|met\s+uitzondering\s+van)\s+(?:op\s+)?((?:'.$wd.')(?:(?:\s*,\s*|\s+en\s+)(?:'.$wd.'))*)\b/iu', $m)) {
+            $days = $this->withoutExcluded([1, 2, 3, 4, 5, 6, 7], $m[1][0]);
+
+            return [$this->rec('FREQ=WEEKLY;BYDAY='.$this->dayCodes($days), $this->nextDayIn($today, $days)), $this->cut($text, $m)];
         }
 
         // Every <nth> <weekday> of the month / quarter, e.g. "iedere eerste
@@ -520,6 +532,54 @@ class DutchDateParser
         }
 
         return $candidate;
+    }
+
+    /**
+     * Drop the weekdays named in $text from $isoDays (order preserved).
+     *
+     * @param  list<int>  $isoDays
+     * @return list<int>
+     */
+    private function withoutExcluded(array $isoDays, string $text): array
+    {
+        if ($text === '') {
+            return $isoDays;
+        }
+
+        $excluded = [];
+        if (preg_match_all('/'.self::WEEKDAY_RE.'/iu', $text, $mm)) {
+            foreach ($mm[0] as $name) {
+                $excluded[] = self::WEEKDAYS[mb_strtolower($name)];
+            }
+        }
+
+        $remaining = array_values(array_diff($isoDays, $excluded));
+
+        return $remaining === [] ? $isoDays : $remaining;
+    }
+
+    /** "MO,TU,WE" for a list of ISO weekdays. */
+    private function dayCodes(array $isoDays): string
+    {
+        return implode(',', array_map(fn (int $iso): string => self::DAY_CODE[$iso], $isoDays));
+    }
+
+    /**
+     * The next date on or after today whose ISO weekday is allowed.
+     *
+     * @param  list<int>  $isoDays
+     */
+    private function nextDayIn(CarbonImmutable $today, array $isoDays): CarbonImmutable
+    {
+        $date = $today;
+        for ($i = 0; $i < 14; $i++) {
+            if (in_array($date->dayOfWeekIso, $isoDays, true)) {
+                return $date;
+            }
+            $date = $date->addDay();
+        }
+
+        return $today;
     }
 
     /** A day within $base's month: a number, "eerste" (1st) or "laatste" (last). */

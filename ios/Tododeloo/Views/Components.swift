@@ -256,25 +256,38 @@ struct ParsePreviewStrip: View {
     }
 
     private func row(_ preview: ParsePreview, showsEyebrow: Bool) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            if showsEyebrow {
-                MonoLabel("leest als", color: Theme.faint)
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                if showsEyebrow {
+                    MonoLabel("leest als", color: Theme.faint)
+                }
+                Text(attributed(preview.segments))
+                    .font(.system(size: 13))
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
             }
-            Text(attributed(preview.segments))
-                .font(.system(size: 13))
-                .fixedSize(horizontal: false, vertical: true)
-                .help(resolvedLabel(preview) ?? "")
-            Spacer(minLength: 6)
+
+            // The resolved date/recurrence on its own full-width line, so a long
+            // recurrence ("Elke dinsdag, woensdag … · vanaf di 26 mei") shows in
+            // full instead of being squeezed into a truncated pill.
             if let label = resolvedLabel(preview) {
-                Text(label)
-                    .font(.mono(10, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .lineLimit(1)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Theme.accent.opacity(0.14), in: Capsule())
+                HStack(spacing: 5) {
+                    Image(systemName: preview.recurrence != nil ? "repeat" : "calendar")
+                        .font(.system(size: 9, weight: .bold))
+                    Text(label)
+                        .font(.mono(10, weight: .semibold))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                }
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Theme.accent.opacity(0.13), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .help(label)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func attributed(_ segments: [ParseSegment]) -> AttributedString {

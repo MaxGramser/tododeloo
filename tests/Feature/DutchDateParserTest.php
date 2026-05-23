@@ -72,6 +72,9 @@ it('parses recurrence phrases into an rrule + anchor and a cleaned title', funct
     'laatste vrijdag van de maand' => ['elke laatste vrijdag van de maand rapport sturen', 'FREQ=MONTHLY;BYDAY=-1FR', '2026-05-29', 'rapport sturen'],
     // Nth weekday of the quarter → MONTHLY;INTERVAL=3 pinned to a quarter start.
     'eerste vrijdag van het kwartaal' => ['iedere eerste vrijdag van het kwartaal de cijfers checken', 'FREQ=MONTHLY;INTERVAL=3;BYDAY=1FR', '2026-07-03', 'de cijfers checken'],
+    // Workday / daily with excluded weekdays.
+    'werkdag behalve maandag' => ['iedere werkdag behalve maandag de planten water geven', 'FREQ=WEEKLY;BYDAY=TU,WE,TH,FR', '2026-05-20', 'de planten water geven'],
+    'elke dag behalve zondag' => ['elke dag behalve zondag pillen innemen', 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA', '2026-05-20', 'pillen innemen'],
 ]);
 
 it('describes the nth-weekday recurrence in Dutch', function () {

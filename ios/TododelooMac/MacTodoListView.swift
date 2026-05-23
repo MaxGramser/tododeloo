@@ -22,11 +22,9 @@ struct MacTodoListView: View {
     @State private var moveTarget: Todo?
 
     var body: some View {
-        VStack(spacing: 0) {
-            quickAdd
-            list
-        }
-        .navigationTitle(model.title)
+        list
+            .safeAreaInset(edge: .top, spacing: 0) { quickAdd }
+            .navigationTitle(model.title)
         .navigationSubtitle(subtitle)
         .toolbar { toolbar }
         .onChange(of: focusQuickAddToken) { _, _ in quickAddFocused = true }

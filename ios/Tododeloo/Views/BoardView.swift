@@ -22,10 +22,6 @@ struct BoardView: View {
                 }
                 quickAddField
 
-                ParsePreviewStrip(text: model.quickAddText)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 10)
-
                 if let message = model.errorMessage {
                     errorBanner(message)
                 }
@@ -155,26 +151,37 @@ struct BoardView: View {
     // MARK: - Quick add
 
     private var quickAddField: some View {
-        HStack(spacing: 12) {
-            AccentDot(size: 8)
-            TextField("Snel toevoegen…", text: $model.quickAddText)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.ink)
-                .submitLabel(.done)
-                .focused($quickAddFocused)
-                .onSubmit {
-                    Task {
-                        await model.submitQuickAdd()
-                        quickAddFocused = true
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                AccentDot(size: 8)
+                TextField("Snel toevoegen…", text: $model.quickAddText)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                    .submitLabel(.done)
+                    .focused($quickAddFocused)
+                    .onSubmit {
+                        Task {
+                            await model.submitQuickAdd()
+                            quickAddFocused = true
+                        }
                     }
-                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+
+            // The preview is the bottom half of the same card — it grows out of
+            // the field when you type something parseable.
+            ParsePreviewStrip(text: model.quickAddText, style: .attached)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
         .background(Theme.surface)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(Theme.ink.opacity(0.85)).frame(height: 2)
-        }
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Theme.hairline, lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 12)
     }
 
     private func errorBanner(_ message: String) -> some View {
