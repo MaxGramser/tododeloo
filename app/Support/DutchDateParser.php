@@ -51,6 +51,7 @@ class DutchDateParser
         $today = ($today ?? CarbonImmutable::today())->startOfDay();
 
         $text = $this->normalize($input);
+        $isReminder = $this->looksLikeReminder($text);
         $text = $this->stripLeadingCommands($text);
         $text = $this->stripTimes($text);
 
@@ -69,6 +70,13 @@ class DutchDateParser
         $title = $this->cleanup($text);
 
         if ($title === '') {
+            // A bare reminder ("herinner me dinsdag") leaves no task text once the
+            // filler and date are stripped, but the scheduling intent is clear —
+            // keep the date/recurrence under a generic title instead of dropping it.
+            if ($isReminder && ($date !== null || $recurrence !== null)) {
+                return ['title' => 'Herinnering', 'date' => $date, 'recurrence' => $recurrence];
+            }
+
             return ['title' => trim($input), 'date' => null, 'recurrence' => null];
         }
 
@@ -299,12 +307,21 @@ class DutchDateParser
 
     // MARK: - Filler stripping
 
+    /** Whether the line is phrased as a reminder ("herinner me …", "onthoud …", "reminder …"). */
+    private function looksLikeReminder(string $text): bool
+    {
+        return preg_match('/\b(?:herinner(?:ing|en)?|onthoud(?:en)?|reminder|memo|vergeet\s+niet|denk\s+(?:er)?aan)\b/iu', $text) === 1;
+    }
+
     private function stripLeadingCommands(string $text): string
     {
         $patterns = [
             '/^(?:kun|kan)\s+(?:je|jij|u)\s+(?:me|mij|mn|m\'n|ons)?\s*/iu',
             '/^(?:zou|wil)\s+je\s+(?:misschien\s+|even\s+)?(?:me|mij)?\s*/iu',
             '/^herinner(?:ing|en)?\s*(?:me|mij|mn|ons)?\s*(?:er)?\s*(?:aan|voor|om|dat)?\s*/iu',
+            '/^onthoud(?:en)?\s*(?:dat\s+(?:ik\s+)?|(?:om|te)\s+)?/iu',
+            '/^reminder\s*[:\-–]?\s*(?:(?:voor|om)\s+)?/iu',
+            '/^memo\s*[:\-–]?\s*/iu',
             '/^denk(?:en)?\s+(?:er)?aan\s+(?:om|te|dat)?\s*/iu',
             '/^vergeet\s+niet\s+(?:om|te|dat)?\s*/iu',
             '/^ik\s+(?:moet|wil|zou|ga|hoef)\s+(?:nog\s+)?/iu',

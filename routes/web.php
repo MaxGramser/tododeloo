@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomListController;
 use App\Http\Controllers\DailyListController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DevQuickLoginController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ListReorderController;
 use App\Http\Controllers\ListSortModeController;
 use App\Http\Controllers\MasterListController;
@@ -33,6 +34,8 @@ if (! app()->environment('production')) {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('help', HelpController::class)->name('help.show');
 
     Route::get('master', MasterListController::class)->name('master.show');
 

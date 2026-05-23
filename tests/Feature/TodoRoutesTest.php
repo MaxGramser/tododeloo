@@ -22,6 +22,12 @@ it('rejects unauthenticated access to lists', function () {
     $this->get(route('master.show'))->assertRedirect(route('login'));
 });
 
+it('renders the help manual page', function () {
+    $this->get(route('help.show'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('Help'));
+});
+
 it('renders the master list page with todos', function () {
     app(CreateTodo::class)($this->user, ['title' => 'Hallo']);
 

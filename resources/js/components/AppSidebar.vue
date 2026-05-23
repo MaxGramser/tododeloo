@@ -2,6 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import {
+    BookOpen,
     CalendarDays,
     Inbox,
     ListChecks,
@@ -191,6 +192,29 @@ function formatDate(iso: string): string {
                                     "
                                 />
                             </form>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup class="px-2 py-0">
+                <SidebarGroupLabel
+                    class="font-mono text-[10px] tracking-widest uppercase"
+                    >ondersteuning</SidebarGroupLabel
+                >
+                <SidebarGroupContent>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                as-child
+                                :is-active="isCurrentUrl('/help')"
+                                tooltip="Handleiding"
+                            >
+                                <Link href="/help">
+                                    <BookOpen />
+                                    <span>Handleiding</span>
+                                </Link>
+                            </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarGroupContent>

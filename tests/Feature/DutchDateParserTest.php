@@ -41,6 +41,12 @@ it('parses a one-off date and keeps the cleaned title', function (string $input,
     'over het weekend' => ['over het weekend klussen', '2026-05-23', 'klussen'],
     'volgende maand de 1e' => ['volgende maand de 1e huur betalen', '2026-06-01', 'huur betalen'],
     'de Ne van volgende maand' => ['de 15e van volgende maand factuur sturen', '2026-06-15', 'factuur sturen'],
+    'over een maand + taak' => ['over een maand de planten verpotten', '2026-06-20', 'de planten verpotten'],
+    'reminder zonder taak → Herinnering' => ['herinner me dinsdag', '2026-05-26', 'Herinnering'],
+    'reminder zonder taak (morgen)' => ['herinner mij morgen', '2026-05-21', 'Herinnering'],
+    'reminder zonder taak (over een maand)' => ['herinner me over een maand', '2026-06-20', 'Herinnering'],
+    'onthoud is gestript' => ['onthoud dinsdag tandarts', '2026-05-26', 'tandarts'],
+    'reminder-woord is gestript' => ['reminder dinsdag tandarts bellen', '2026-05-26', 'tandarts bellen'],
 ]);
 
 it('parses recurrence phrases into an rrule + anchor and a cleaned title', function (string $input, string $rrule, string $anchor, string $title) {
@@ -60,6 +66,7 @@ it('parses recurrence phrases into an rrule + anchor and a cleaned title', funct
     'jaarlijks' => ['elk jaar verjaardag vieren', 'FREQ=YEARLY', '2026-05-20', 'verjaardag vieren'],
     'om de week' => ['om de week planten water geven', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', '2026-05-25', 'planten water geven'],
     'elke 2 dagen' => ['elke 2 dagen pillen innemen', 'FREQ=DAILY;INTERVAL=2', '2026-05-20', 'pillen innemen'],
+    'reminder zonder taak → herhaling' => ['herinner me elke dinsdag', 'FREQ=WEEKLY;BYDAY=TU', '2026-05-26', 'Herinnering'],
 ]);
 
 it('produces rrules that match the recurrence presets', function () {
