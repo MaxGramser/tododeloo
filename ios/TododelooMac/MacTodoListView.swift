@@ -9,6 +9,11 @@ struct MacTodoListView: View {
     @Bindable var model: BoardModel
     let lists: ListsModel
     @Binding var selectedTodoID: Int?
+    // Bumped by the menu commands to focus quick-add, rename, or move the
+    // selected todo — things the list owns the @FocusState / sheet state for.
+    var focusQuickAddToken = 0
+    var renameSelectedToken = 0
+    var moveSelectedToken = 0
     @FocusState private var quickAddFocused: Bool
 
     @State private var renamingID: Int?
@@ -24,6 +29,17 @@ struct MacTodoListView: View {
         .navigationTitle(model.title)
         .navigationSubtitle(subtitle)
         .toolbar { toolbar }
+        .onChange(of: focusQuickAddToken) { _, _ in quickAddFocused = true }
+        .onChange(of: renameSelectedToken) { _, _ in
+            if let todo = model.visibleTodos.first(where: { $0.id == selectedTodoID }) {
+                startRename(todo)
+            }
+        }
+        .onChange(of: moveSelectedToken) { _, _ in
+            if let todo = model.visibleTodos.first(where: { $0.id == selectedTodoID }) {
+                moveTarget = todo
+            }
+        }
         .sheet(item: $customRecurrenceTodo) { todo in
             MacRecurrenceSheet(anchorISO: model.recurrenceAnchorISO) { rrule in
                 Task { await model.setCustomRecurrence(todo, rrule: rrule) }

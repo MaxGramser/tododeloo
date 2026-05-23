@@ -28,6 +28,12 @@ struct MacContentView: View {
     @State private var selectedTodoID: Int?
     @State private var creatingList = false
 
+    // Menu commands can't reach into the list's @FocusState / sheet state
+    // directly, so they bump a token the list watches and acts on.
+    @State private var focusQuickAddToken = 0
+    @State private var renameSelectedToken = 0
+    @State private var moveSelectedToken = 0
+
     var body: some View {
         NavigationSplitView {
             MacSidebar(lists: lists, upcoming: upcoming, selection: $selection) { creatingList = true }
@@ -37,7 +43,14 @@ struct MacContentView: View {
                 if board.needsRitual {
                     MacRitualView(model: board)
                 } else {
-                    MacTodoListView(model: board, lists: lists, selectedTodoID: $selectedTodoID)
+                    MacTodoListView(
+                        model: board,
+                        lists: lists,
+                        selectedTodoID: $selectedTodoID,
+                        focusQuickAddToken: focusQuickAddToken,
+                        renameSelectedToken: renameSelectedToken,
+                        moveSelectedToken: moveSelectedToken
+                    )
                 }
             }
             .navigationSplitViewColumnWidth(min: 340, ideal: 420, max: 640)
@@ -47,6 +60,7 @@ struct MacContentView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .toastHost()
+        .focusedSceneValue(\.boardActions, makeBoardActions())
         .task {
             lists.onUnauthorized = { session.handleUnauthorized() }
             upcoming.onUnauthorized = { session.handleUnauthorized() }
@@ -74,6 +88,51 @@ struct MacContentView: View {
                 }
             }
         }
+    }
+
+    /// Rebuilt on every render so the menu reflects the current board. Closures
+    /// read live state at call time; flags drive each item's enabled state.
+    private func makeBoardActions() -> BoardActions {
+        let selectedTodo = board.todos.first { $0.id == selectedTodoID }
+        let firstUpcoming = upcoming.days.first { $0.date != nil && !($0.todos ?? []).isEmpty }?.date
+
+        return BoardActions(
+            hasSelectedTodo: selectedTodo != nil,
+            selectedIsCompleted: selectedTodo?.isCompleted ?? false,
+            isDayBoard: board.isDayBoard && !board.needsRitual,
+            isToday: board.context == .today && board.isViewingToday && !board.needsRitual,
+            hasUpcoming: firstUpcoming != nil,
+            newTodo: { focusQuickAddToken += 1 },
+            newList: { creatingList = true },
+            toggleSelected: {
+                if let todo = board.todos.first(where: { $0.id == selectedTodoID }) {
+                    Task { await board.toggle(todo) }
+                }
+            },
+            renameSelected: { renameSelectedToken += 1 },
+            moveSelected: { moveSelectedToken += 1 },
+            deleteSelected: {
+                if let todo = board.todos.first(where: { $0.id == selectedTodoID }) {
+                    Task { await board.delete(todo) }
+                }
+            },
+            goToday: {
+                if selection == .today {
+                    Task { await board.goToToday() }
+                } else {
+                    selection = .today
+                }
+            },
+            goMaster: { selection = .master },
+            goUpcoming: {
+                if let date = upcoming.days.first(where: { $0.date != nil && !($0.todos ?? []).isEmpty })?.date {
+                    selection = .day(date)
+                }
+            },
+            previousDay: { Task { await board.shiftDay(by: -1) } },
+            nextDay: { Task { await board.shiftDay(by: 1) } },
+            resetRitual: { Task { await board.resetRitual() } }
+        )
     }
 }
 
