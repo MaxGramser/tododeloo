@@ -117,6 +117,21 @@ class DutchDateParser
             return [$this->rec('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', Workday::quickAddTargetDate($today)), $this->cut($text, $m)];
         }
 
+        // Every <nth> <weekday> of the month / quarter, e.g. "iedere eerste
+        // dinsdag van de maand" or "elke laatste vrijdag van het kwartaal".
+        $ordinal = '(eerste|tweede|derde|vierde|vijfde|laatste|\d{1,2}(?:e|ste|de)?)';
+        if ($this->find($text, '/\b'.$every.'\s+'.$ordinal.'\s+('.self::WEEKDAY_RE.')\s+van\s+(?:de\s+|het\s+)?(maand|kwartaal)\b/iu', $m)) {
+            $n = $this->ordinalNumber($m[1][0]);
+            $iso = self::WEEKDAYS[mb_strtolower($m[2][0])];
+            $byDay = $this->nthCode($n).self::DAY_CODE[$iso];
+
+            if (mb_strtolower($m[3][0]) === 'kwartaal') {
+                return [$this->rec('FREQ=MONTHLY;INTERVAL=3;BYDAY='.$byDay, $this->upcomingQuarterlyNthWeekday($today, $n, $iso)), $this->cut($text, $m)];
+            }
+
+            return [$this->rec('FREQ=MONTHLY;BYDAY='.$byDay, $this->upcomingNthWeekday($today, $n, $iso)), $this->cut($text, $m)];
+        }
+
         // Every <weekday>.
         if ($this->find($text, '/\b'.$every.'\s+('.self::WEEKDAY_RE.')\b/iu', $m)) {
             $iso = self::WEEKDAYS[mb_strtolower($m[1][0])];
@@ -436,6 +451,77 @@ class DutchDateParser
         return $today->startOfWeek(CarbonInterface::MONDAY)->addWeeks($weeks)->addDays($iso - 1);
     }
 
+    /** "eerste" → 1, "laatste" → -1, "2e" → 2, … */
+    private function ordinalNumber(string $token): int
+    {
+        $token = mb_strtolower(trim($token));
+
+        return match (true) {
+            str_starts_with($token, 'eerste') => 1,
+            str_starts_with($token, 'tweede') => 2,
+            str_starts_with($token, 'derde') => 3,
+            str_starts_with($token, 'vierde') => 4,
+            str_starts_with($token, 'vijfde') => 5,
+            str_starts_with($token, 'laatste') => -1,
+            default => max(1, (int) preg_replace('/\D/', '', $token)),
+        };
+    }
+
+    /** RRULE BYDAY ordinal: 1..5 or -1 for "last". */
+    private function nthCode(int $n): string
+    {
+        return $n < 0 ? '-1' : (string) $n;
+    }
+
+    /** The $n-th occurrence of ISO weekday $iso within $base's month (n<0 → last). */
+    private function nthWeekday(CarbonImmutable $base, int $n, int $iso): CarbonImmutable
+    {
+        if ($n < 0) {
+            $date = $base->endOfMonth()->startOfDay();
+            while ($date->dayOfWeekIso !== $iso) {
+                $date = $date->subDay();
+            }
+
+            return $date;
+        }
+
+        $date = $base->startOfMonth();
+        while ($date->dayOfWeekIso !== $iso) {
+            $date = $date->addDay();
+        }
+
+        return $date->addWeeks($n - 1)->startOfDay();
+    }
+
+    /** Next $n-th $iso-weekday on or after today, repeating monthly. */
+    private function upcomingNthWeekday(CarbonImmutable $today, int $n, int $iso): CarbonImmutable
+    {
+        $candidate = $this->nthWeekday($today, $n, $iso);
+        if ($candidate->lt($today) || $candidate->month !== $today->month) {
+            $candidate = $this->nthWeekday($today->startOfMonth()->addMonth(), $n, $iso);
+        }
+
+        return $candidate;
+    }
+
+    /**
+     * Next $n-th $iso-weekday at the start of a calendar quarter (Jan/Apr/Jul/Oct).
+     * Uses the current quarter if its occurrence is still upcoming, else the next
+     * one — so a MONTHLY;INTERVAL=3 rule anchored here lands on every quarter start.
+     */
+    private function upcomingQuarterlyNthWeekday(CarbonImmutable $today, int $n, int $iso): CarbonImmutable
+    {
+        $quarterStartMonth = (int) (floor(($today->month - 1) / 3) * 3) + 1;
+        $base = $today->startOfMonth()->month($quarterStartMonth);
+
+        $candidate = $this->nthWeekday($base, $n, $iso);
+        if ($candidate->lt($today)) {
+            $candidate = $this->nthWeekday($base->addMonths(3), $n, $iso);
+        }
+
+        return $candidate;
+    }
+
     /** A day within $base's month: a number, "eerste" (1st) or "laatste" (last). */
     private function dayOfMonth(CarbonImmutable $base, string $token): CarbonImmutable
     {
@@ -546,6 +632,12 @@ class DutchDateParser
 
         $date = $parsed['date'];
         $recurrence = $parsed['recurrence'];
+
+        // A bare phrase with no task becomes a plain title (parse drops the
+        // schedule); don't highlight a phantom date/recurrence in that case.
+        if ($date === null && $recurrence === null) {
+            $this->matchedPhrase = null;
+        }
 
         $dateInfo = $date !== null
             ? ['iso' => $date->toDateString(), 'label' => $this->dateLabel($date)]

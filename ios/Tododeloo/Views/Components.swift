@@ -201,7 +201,12 @@ struct SheetScaffold<Content: View>: View {
 /// under any quick-add field on iOS and Mac. On Mac, hovering shows the resolved
 /// value as a tooltip.
 struct ParsePreviewStrip: View {
+    /// `.plain` floats the preview on its own; `.attached` draws a top hairline +
+    /// inner padding so it reads as the bottom half of the quick-add card it sits in.
+    enum Style { case plain, attached }
+
     let text: String
+    var style: Style = .plain
     @State private var preview: ParsePreview?
 
     var body: some View {
@@ -237,10 +242,26 @@ struct ParsePreviewStrip: View {
 
     @ViewBuilder
     private func content(_ preview: ParsePreview) -> some View {
+        switch style {
+        case .plain:
+            row(preview, showsEyebrow: true)
+        case .attached:
+            VStack(spacing: 0) {
+                Rectangle().fill(Theme.hairline).frame(height: 1)
+                row(preview, showsEyebrow: false)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+            }
+        }
+    }
+
+    private func row(_ preview: ParsePreview, showsEyebrow: Bool) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            MonoLabel("leest als", color: Theme.faint)
+            if showsEyebrow {
+                MonoLabel("leest als", color: Theme.faint)
+            }
             Text(attributed(preview.segments))
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .fixedSize(horizontal: false, vertical: true)
                 .help(resolvedLabel(preview) ?? "")
             Spacer(minLength: 6)

@@ -11,11 +11,6 @@ struct MacMenuBarContent: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             quickAdd
-            if !model.quickAddText.trimmingCharacters(in: .whitespaces).isEmpty {
-                ParsePreviewStrip(text: model.quickAddText)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 10)
-            }
             Divider().padding(.horizontal, 14)
             body(for: phase)
             Divider().padding(.horizontal, 14)
@@ -50,17 +45,22 @@ struct MacMenuBarContent: View {
     }
 
     private var quickAdd: some View {
-        HStack(spacing: 9) {
-            Image(systemName: "plus").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accent)
-            TextField("Snel toevoegen…", text: $model.quickAddText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
-                .onSubmit { Task { await model.submitQuickAdd() } }
+        VStack(spacing: 0) {
+            HStack(spacing: 9) {
+                Image(systemName: "plus").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accent)
+                TextField("Snel toevoegen…", text: $model.quickAddText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium))
+                    .onSubmit { Task { await model.submitQuickAdd() } }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+
+            ParsePreviewStrip(text: model.quickAddText, style: .attached)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
+        .background(Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 1))
         .padding(.horizontal, 14)
         .padding(.bottom, 10)
     }

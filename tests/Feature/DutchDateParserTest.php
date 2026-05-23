@@ -67,7 +67,24 @@ it('parses recurrence phrases into an rrule + anchor and a cleaned title', funct
     'om de week' => ['om de week planten water geven', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', '2026-05-25', 'planten water geven'],
     'elke 2 dagen' => ['elke 2 dagen pillen innemen', 'FREQ=DAILY;INTERVAL=2', '2026-05-20', 'pillen innemen'],
     'reminder zonder taak → herhaling' => ['herinner me elke dinsdag', 'FREQ=WEEKLY;BYDAY=TU', '2026-05-26', 'Herinnering'],
+    // Nth weekday of the month → MONTHLY;BYDAY=nXX, anchored on the next such date.
+    'eerste dinsdag van de maand' => ['iedere eerste dinsdag van de maand eten geven aan de hond', 'FREQ=MONTHLY;BYDAY=1TU', '2026-06-02', 'eten geven aan de hond'],
+    'laatste vrijdag van de maand' => ['elke laatste vrijdag van de maand rapport sturen', 'FREQ=MONTHLY;BYDAY=-1FR', '2026-05-29', 'rapport sturen'],
+    // Nth weekday of the quarter → MONTHLY;INTERVAL=3 pinned to a quarter start.
+    'eerste vrijdag van het kwartaal' => ['iedere eerste vrijdag van het kwartaal de cijfers checken', 'FREQ=MONTHLY;INTERVAL=3;BYDAY=1FR', '2026-07-03', 'de cijfers checken'],
 ]);
+
+it('describes the nth-weekday recurrence in Dutch', function () {
+    $presets = new RecurrencePresets;
+
+    $monthly = parseNL('iedere eerste dinsdag van de maand x')['recurrence'];
+    expect($presets->describe($monthly['rrule'], $monthly['anchor'])['label'])
+        ->toBe('Maandelijks op de 1e dinsdag');
+
+    $quarterly = parseNL('iedere eerste vrijdag van het kwartaal x')['recurrence'];
+    expect($presets->describe($quarterly['rrule'], $quarterly['anchor'])['label'])
+        ->toBe('Elke 3 maanden op de 1e vrijdag');
+});
 
 it('produces rrules that match the recurrence presets', function () {
     // The "elke werkdag" / "elke dinsdag" / "elke dag" rrules should equal what

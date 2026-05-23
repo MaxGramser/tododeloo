@@ -24,9 +24,6 @@ struct MacTodoListView: View {
     var body: some View {
         VStack(spacing: 0) {
             quickAdd
-            ParsePreviewStrip(text: model.quickAddText)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
             list
         }
         .navigationTitle(model.title)
@@ -62,26 +59,33 @@ struct MacTodoListView: View {
     /// A tidy, theme-coloured input at the top of the column (a centered toolbar
     /// field would sit crooked over the split-view's midpoint).
     private var quickAdd: some View {
-        HStack(spacing: 9) {
-            Image(systemName: "plus")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Theme.accent)
-            TextField("Snel toevoegen…", text: $model.quickAddText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
-                .focused($quickAddFocused)
-                .onSubmit {
-                    Task {
-                        await model.submitQuickAdd()
-                        quickAddFocused = true
+        VStack(spacing: 0) {
+            HStack(spacing: 9) {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Theme.accent)
+                TextField("Snel toevoegen…", text: $model.quickAddText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium))
+                    .focused($quickAddFocused)
+                    .onSubmit {
+                        Task {
+                            await model.submitQuickAdd()
+                            quickAddFocused = true
+                        }
                     }
-                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+
+            // The preview is the bottom half of the same card — it grows out of
+            // the field when you type something parseable.
+            ParsePreviewStrip(text: model.quickAddText, style: .attached)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+        .background(Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 1)
         )
         .padding(.horizontal, 14)
