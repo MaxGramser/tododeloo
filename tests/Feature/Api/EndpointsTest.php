@@ -58,6 +58,27 @@ it('starts the day carrying selected todos plus new ones', function () {
     CarbonImmutable::setTestNow();
 });
 
+it('resets the ritual so the day drops back into the morning ritual', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    // A started day with a todo already on it.
+    $today = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::today());
+    $todo = app(CreateTodo::class)($this->user, ['title' => 'Al gepland']);
+    app(AddTodoToList::class)($todo, $today);
+    $today->update(['started_at' => now()]);
+
+    $this->getJson(route('api.today'))->assertJsonPath('needs_ritual', false);
+
+    $this->postJson(route('api.days.reset', '2026-05-20'))
+        ->assertOk()
+        ->assertJsonPath('needs_ritual', true)
+        ->assertJsonPath('pre_scheduled.0.title', 'Al gepland');
+
+    expect($today->fresh()->started_at)->toBeNull();
+
+    CarbonImmutable::setTestNow();
+});
+
 it('creates a todo and attaches it to master', function () {
     $this->postJson(route('api.todos.store'), ['title' => 'Boodschappen'])
         ->assertOk()

@@ -196,6 +196,23 @@ it('start marks the day as started and carries selected todos plus new ones', fu
     CarbonImmutable::setTestNow();
 });
 
+it('reset re-opens the morning ritual for the day', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 8, 0));
+    $today = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::today());
+    $today->update(['started_at' => now()]);
+
+    $this->get(route('today.show'))
+        ->assertInertia(fn ($page) => $page->where('needsRitual', false));
+
+    $this->post(route('day.reset', '2026-05-20'))->assertRedirect();
+
+    expect($today->fresh()->started_at)->toBeNull();
+    $this->get(route('today.show'))
+        ->assertInertia(fn ($page) => $page->where('needsRitual', true));
+
+    CarbonImmutable::setTestNow();
+});
+
 it('quick-adds a todo to today on a weekday', function () {
     CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
 

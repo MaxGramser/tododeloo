@@ -223,6 +223,13 @@ struct BoardView: View {
                 Divider()
                 filterMenuItems
 
+                if model.context == .today && model.isViewingToday {
+                    Divider()
+                    Button { Task { await model.resetRitual() } } label: {
+                        Label("Ritueel opnieuw", systemImage: "arrow.counterclockwise")
+                    }
+                }
+
             } label: {
                 Image(systemName: model.hasActiveFilter
                     ? "line.3.horizontal.decrease.circle.fill"

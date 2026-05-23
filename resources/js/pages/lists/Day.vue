@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowRight, X } from 'lucide-vue-next';
+import { ArrowRight, RotateCcw, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import PageHero from '@/components/PageHero.vue';
 import TodoListView from '@/components/todo/TodoListView.vue';
@@ -133,6 +133,14 @@ function startDay() {
     );
 }
 
+function resetRitual() {
+    router.post(
+        `/day/${props.date}/reset`,
+        {},
+        { preserveScroll: true },
+    );
+}
+
 const previousLabel = computed(() => {
     const d = new Date(props.previousWorkday + 'T00:00:00');
 
@@ -157,7 +165,17 @@ const previousLabel = computed(() => {
                 ? { value: `${completionPercent}%`, label: 'klaar' }
                 : undefined
         "
-    />
+    >
+        <button
+            v-if="isToday && !needsRitual && list"
+            type="button"
+            class="inline-flex items-center gap-1.5 self-start font-mono text-[10px] tracking-widest text-muted-foreground uppercase transition-colors hover:text-foreground"
+            @click="resetRitual"
+        >
+            <RotateCcw class="size-3" />
+            ritueel opnieuw
+        </button>
+    </PageHero>
 
     <div v-if="needsRitual" class="px-6 pb-40 sm:px-10">
         <form

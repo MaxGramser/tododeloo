@@ -203,6 +203,10 @@ struct MacTodoListView: View {
                 }
                 Divider()
                 filterMenu
+                if model.context == .today && model.isViewingToday {
+                    Divider()
+                    Button("Ritueel opnieuw") { Task { await model.resetRitual() } }
+                }
             } label: {
                 Image(systemName: model.hasActiveFilter
                     ? "line.3.horizontal.decrease.circle.fill"

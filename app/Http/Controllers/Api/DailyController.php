@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Recurrences\MaterializeRecurrences;
 use App\Actions\Todos\BuildRitualCandidates;
 use App\Actions\Todos\BuildUpcomingSchedule;
+use App\Actions\Todos\ResetRitual;
 use App\Actions\Todos\StartDay;
 use App\Enums\ListType;
 use App\Http\Controllers\Controller;
@@ -76,6 +77,19 @@ class DailyController extends Controller
         return [
             'list' => TodoListResource::make($list->load(['todos.tags', 'todos.lists', 'todos.subTodos', 'todos.recurrence']))->resolve(),
         ];
+    }
+
+    /**
+     * Re-open the morning ritual for a date and return its fresh payload so the
+     * client drops straight back into the ritual.
+     *
+     * @return array<string, mixed>
+     */
+    public function reset(Request $request, ResetRitual $resetRitual, string $date): array
+    {
+        $resetRitual($request->user(), CarbonImmutable::parse($date));
+
+        return $this->payloadForDate($request, CarbonImmutable::parse($date));
     }
 
     /**

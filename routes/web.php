@@ -43,6 +43,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('day/{date}/start', [DailyListController::class, 'start'])
         ->where('date', '\d{4}-\d{2}-\d{2}')
         ->name('day.start');
+    Route::post('day/{date}/reset', [DailyListController::class, 'reset'])
+        ->where('date', '\d{4}-\d{2}-\d{2}')
+        ->name('day.reset');
 
     Route::post('lists', [CustomListController::class, 'store'])->name('lists.store');
     Route::get('lists/{list}', [CustomListController::class, 'show'])->name('lists.show');

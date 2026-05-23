@@ -65,6 +65,11 @@ final class APIClient {
         return response.days
     }
 
+    /// Re-open the morning ritual for a date; returns its fresh payload.
+    func resetRitual(_ date: String) async throws -> TodayResponse {
+        try await send(.post, "days/\(date)/reset")
+    }
+
     func startDay(_ date: String, carryOverIds: [Int], newTitles: [String]) async throws -> TodoList {
         let response: ListResponse = try await send(.post, "days/\(date)/start", body: [
             "carry_over_ids": carryOverIds,

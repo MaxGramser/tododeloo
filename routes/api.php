@@ -24,6 +24,9 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::post('days/{date}/start', [DailyController::class, 'start'])
         ->where('date', '\d{4}-\d{2}-\d{2}')
         ->name('days.start');
+    Route::post('days/{date}/reset', [DailyController::class, 'reset'])
+        ->where('date', '\d{4}-\d{2}-\d{2}')
+        ->name('days.reset');
 
     Route::get('lists', [ListController::class, 'index'])->name('lists.index');
     Route::get('master', [ListController::class, 'master'])->name('master');

@@ -239,6 +239,17 @@ final class BoardModel {
         }
     }
 
+    /// Re-open today's morning ritual. The reload flips `needsRitual` back on,
+    /// so the parent view swaps to the ritual screen.
+    func resetRitual() async {
+        do {
+            _ = try await api.resetRitual(effectiveDate)
+            await load()
+        } catch {
+            handle(error)
+        }
+    }
+
     // MARK: - Todo actions
 
     func toggle(_ todo: Todo) async {

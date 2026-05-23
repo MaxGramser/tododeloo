@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Recurrences\MaterializeRecurrences;
 use App\Actions\Todos\BuildRitualCandidates;
+use App\Actions\Todos\ResetRitual;
 use App\Actions\Todos\StartDay;
 use App\Enums\ListType;
 use App\Http\Resources\TodoListResource;
@@ -47,6 +48,16 @@ class DailyListController extends Controller
             $validated['carry_over_ids'] ?? [],
             $validated['new_titles'] ?? [],
         );
+
+        return back();
+    }
+
+    /**
+     * Re-open the morning ritual for a date so it can be run again.
+     */
+    public function reset(Request $request, ResetRitual $resetRitual, string $date): RedirectResponse
+    {
+        $resetRitual($request->user(), CarbonImmutable::parse($date));
 
         return back();
     }
