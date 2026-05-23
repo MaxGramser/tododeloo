@@ -634,11 +634,13 @@ class DutchDateParser
             }
         }
 
-        // Glue whitespace onto the preceding run so segments tile the input.
+        // Glue whitespace onto the preceding run so segments tile the input —
+        // except the space *after* a date/recurrence phrase stays neutral, so the
+        // highlight hugs the phrase tightly instead of trailing into the gap.
         $last = null;
         for ($i = 0; $i < $n; $i++) {
             if ($types[$i] === null) {
-                $types[$i] = $last;
+                $types[$i] = ($last === 'date' || $last === 'recurrence') ? 'ignored' : $last;
             } else {
                 $last = $types[$i];
             }

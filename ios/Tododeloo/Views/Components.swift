@@ -208,22 +208,30 @@ struct ParsePreviewStrip: View {
         Group {
             if let preview, !preview.segments.isEmpty {
                 content(preview)
+            } else {
+                // A concrete, zero-height placeholder. SwiftUI never "appears" an
+                // empty view, so `.task` would never fire — and the strip would
+                // stay invisible forever. This keeps a real view in the layout so
+                // the debounced fetch actually runs.
+                Color.clear.frame(height: 0)
             }
         }
         .animation(.snappy(duration: 0.2), value: preview)
-        .task(id: text) {
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty, APIClient.shared.isAuthenticated else {
-                preview = nil
-                return
-            }
-            // Debounce: this task is cancelled and restarted on every keystroke.
-            try? await Task.sleep(for: .milliseconds(220))
-            guard !Task.isCancelled else { return }
-            let result = try? await APIClient.shared.parsePreview(trimmed)
-            if !Task.isCancelled {
-                preview = result
-            }
+        .task(id: text) { await refresh() }
+    }
+
+    private func refresh() async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, APIClient.shared.isAuthenticated else {
+            preview = nil
+            return
+        }
+        // Debounce: this task is cancelled and restarted on every keystroke.
+        try? await Task.sleep(for: .milliseconds(220))
+        guard !Task.isCancelled else { return }
+        let result = try? await APIClient.shared.parsePreview(trimmed)
+        if !Task.isCancelled {
+            preview = result
         }
     }
 
