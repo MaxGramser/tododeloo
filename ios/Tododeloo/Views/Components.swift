@@ -193,6 +193,90 @@ struct SheetScaffold<Content: View>: View {
     }
 }
 
+// MARK: - Quick-add parse preview
+
+/// A live strip under a quick-add field: shows the typed sentence coloured by
+/// how it will be parsed (date/recurrence in accent, the task in ink, filler
+/// dimmed) plus the resolved date. Debounced; reuses the shared API. Drop it
+/// under any quick-add field on iOS and Mac. On Mac, hovering shows the resolved
+/// value as a tooltip.
+struct ParsePreviewStrip: View {
+    let text: String
+    @State private var preview: ParsePreview?
+
+    var body: some View {
+        Group {
+            if let preview, !preview.segments.isEmpty {
+                content(preview)
+            }
+        }
+        .animation(.snappy(duration: 0.2), value: preview)
+        .task(id: text) {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, APIClient.shared.isAuthenticated else {
+                preview = nil
+                return
+            }
+            // Debounce: this task is cancelled and restarted on every keystroke.
+            try? await Task.sleep(for: .milliseconds(220))
+            guard !Task.isCancelled else { return }
+            let result = try? await APIClient.shared.parsePreview(trimmed)
+            if !Task.isCancelled {
+                preview = result
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func content(_ preview: ParsePreview) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            MonoLabel("leest als", color: Theme.faint)
+            Text(attributed(preview.segments))
+                .font(.system(size: 14))
+                .fixedSize(horizontal: false, vertical: true)
+                .help(resolvedLabel(preview) ?? "")
+            Spacer(minLength: 6)
+            if let label = resolvedLabel(preview) {
+                Text(label)
+                    .font(.mono(10, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .lineLimit(1)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Theme.accent.opacity(0.14), in: Capsule())
+            }
+        }
+    }
+
+    private func attributed(_ segments: [ParseSegment]) -> AttributedString {
+        var result = AttributedString()
+        for segment in segments {
+            var piece = AttributedString(segment.text)
+            switch segment.type {
+            case "date", "recurrence":
+                piece.foregroundColor = Theme.accent
+                piece.font = .system(size: 14, weight: .semibold)
+            case "title":
+                piece.foregroundColor = Theme.ink
+            default:
+                piece.foregroundColor = Theme.faint
+            }
+            result += piece
+        }
+        return result
+    }
+
+    private func resolvedLabel(_ preview: ParsePreview) -> String? {
+        if let date = preview.date {
+            return date.label
+        }
+        if let recurrence = preview.recurrence {
+            return "\(recurrence.summary) · vanaf \(recurrence.anchorLabel)"
+        }
+        return nil
+    }
+}
+
 // MARK: - Toast
 
 /// A transient confirmation banner. Reusable across the app: call

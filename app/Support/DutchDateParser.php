@@ -44,6 +44,20 @@ class DutchDateParser
     private const NUMBER_RE = '\d+|een|één|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|elf|twaalf|paar';
 
     /**
+     * While true, `cut()` remembers the matched date/recurrence phrase so
+     * `annotate()` can map it back onto the original sentence for highlighting.
+     */
+    private bool $recording = false;
+
+    /** @var array{text: string, kind: string}|null */
+    private ?array $matchedPhrase = null;
+
+    /** Which bucket the currently-running extractor records into. */
+    private string $currentKind = 'date';
+
+    public function __construct(private ?RecurrencePresets $presets = null) {}
+
+    /**
      * @return array{title: string, date: ?CarbonImmutable, recurrence: ?array{rrule: string, anchor: CarbonImmutable}}
      */
     public function parse(string $input, ?CarbonImmutable $today = null): array
@@ -95,6 +109,7 @@ class DutchDateParser
      */
     private function extractRecurrence(string $text, CarbonImmutable $today): array
     {
+        $this->currentKind = 'recurrence';
         $every = '(?:elke|iedere|elk|ieder|alle)';
 
         // Every workday.
@@ -163,6 +178,7 @@ class DutchDateParser
      */
     private function extractDate(string $text, CarbonImmutable $today): array
     {
+        $this->currentKind = 'date';
         $wd = self::WEEKDAY_RE;
         $num = self::NUMBER_RE;
         $month = implode('|', array_keys(self::MONTHS));
@@ -460,6 +476,11 @@ class DutchDateParser
     /** @param array<int, array{0: string, 1: int}> $m */
     private function cut(string $text, array $m): string
     {
+        if ($this->recording) {
+            // Remember the winning phrase so annotate() can highlight it.
+            $this->matchedPhrase = ['text' => $m[0][0], 'kind' => $this->currentKind];
+        }
+
         return substr_replace($text, ' ', $m[0][1], strlen($m[0][0]));
     }
 
@@ -491,5 +512,180 @@ class DutchDateParser
     private function rec(string $rrule, CarbonImmutable $anchor): array
     {
         return ['rrule' => $rrule, 'anchor' => $anchor];
+    }
+
+    // MARK: - Live preview annotation
+
+    /**
+     * A live "how will this be parsed" preview: the original sentence tiled into
+     * coloured segments (date / recurrence / title / ignored), each carrying the
+     * resolved value. Platform-agnostic — web, iOS and Mac render the same data.
+     * Concatenating every segment's `text` reproduces the input verbatim, so
+     * front ends never need to do offset math.
+     *
+     * @return array{
+     *     input: string,
+     *     title: string,
+     *     date: ?array{iso: string, label: string},
+     *     recurrence: ?array{rrule: string, summary: string, anchor_iso: string, anchor_label: string},
+     *     segments: list<array{type: string, text: string, start: int, length: int, resolved?: string}>,
+     * }
+     */
+    public function annotate(string $input, ?CarbonImmutable $today = null): array
+    {
+        $today = ($today ?? CarbonImmutable::today())->startOfDay();
+        $original = $this->normalize($input);
+
+        $this->recording = true;
+        $this->matchedPhrase = null;
+        try {
+            $parsed = $this->parse($input, $today);
+        } finally {
+            $this->recording = false;
+        }
+
+        $date = $parsed['date'];
+        $recurrence = $parsed['recurrence'];
+
+        $dateInfo = $date !== null
+            ? ['iso' => $date->toDateString(), 'label' => $this->dateLabel($date)]
+            : null;
+
+        $recurrenceInfo = null;
+        $recurrenceResolved = null;
+        if ($recurrence !== null) {
+            $presets = $this->presets ?? app(RecurrencePresets::class);
+            $summary = $presets->describe($recurrence['rrule'], $recurrence['anchor'])['label'];
+            $anchorLabel = $this->shortLabel($recurrence['anchor']);
+            $recurrenceInfo = [
+                'rrule' => $recurrence['rrule'],
+                'summary' => $summary,
+                'anchor_iso' => $recurrence['anchor']->toDateString(),
+                'anchor_label' => $anchorLabel,
+            ];
+            $recurrenceResolved = $summary.' · vanaf '.$anchorLabel;
+        }
+
+        $segments = $this->buildSegments(
+            $original,
+            $this->matchedPhrase,
+            $parsed['title'],
+            $dateInfo['label'] ?? null,
+            $recurrenceResolved,
+        );
+
+        return [
+            'input' => $original,
+            'title' => $parsed['title'],
+            'date' => $dateInfo,
+            'recurrence' => $recurrenceInfo,
+            'segments' => $segments,
+        ];
+    }
+
+    /**
+     * Tile the original sentence into typed segments. The date/recurrence phrase
+     * is located verbatim; the cleaned title is matched word-for-word as an
+     * ordered subsequence (so stripped filler shows as "ignored").
+     *
+     * @param  array{text: string, kind: string}|null  $phrase
+     * @return list<array{type: string, text: string, start: int, length: int, resolved?: string}>
+     */
+    private function buildSegments(string $original, ?array $phrase, string $title, ?string $dateResolved, ?string $recurrenceResolved): array
+    {
+        $n = strlen($original);
+        if ($n === 0) {
+            return [];
+        }
+
+        $types = array_fill(0, $n, null);
+
+        $pStart = $pEnd = -1;
+        if ($phrase !== null && $phrase['text'] !== '') {
+            $pos = strpos($original, $phrase['text']);
+            if ($pos !== false) {
+                $pStart = $pos;
+                $pEnd = $pos + strlen($phrase['text']);
+            }
+        }
+
+        $titleWords = preg_split('/\s+/u', $title, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $ti = 0;
+        preg_match_all('/\S+/u', $original, $wm, PREG_OFFSET_CAPTURE);
+        foreach ($wm[0] as [$word, $off]) {
+            $start = $off;
+            $end = $off + strlen($word);
+            if ($pStart >= 0 && $start >= $pStart && $end <= $pEnd) {
+                continue; // belongs to the date/recurrence phrase
+            }
+            $type = 'ignored';
+            if ($ti < count($titleWords) && $this->wordCore($word) === $this->wordCore($titleWords[$ti])) {
+                $type = 'title';
+                $ti++;
+            }
+            for ($i = $start; $i < $end; $i++) {
+                $types[$i] = $type;
+            }
+        }
+
+        if ($pStart >= 0) {
+            for ($i = $pStart; $i < $pEnd; $i++) {
+                $types[$i] = $phrase['kind'];
+            }
+        }
+
+        // Glue whitespace onto the preceding run so segments tile the input.
+        $last = null;
+        for ($i = 0; $i < $n; $i++) {
+            if ($types[$i] === null) {
+                $types[$i] = $last;
+            } else {
+                $last = $types[$i];
+            }
+        }
+
+        $segments = [];
+        $i = 0;
+        while ($i < $n) {
+            $type = $types[$i] ?? 'ignored';
+            $j = $i;
+            while ($j < $n && ($types[$j] ?? 'ignored') === $type) {
+                $j++;
+            }
+            $segment = [
+                'type' => $type,
+                'text' => substr($original, $i, $j - $i),
+                'start' => $i,
+                'length' => $j - $i,
+            ];
+            if ($type === 'date' && $dateResolved !== null) {
+                $segment['resolved'] = $dateResolved;
+            }
+            if ($type === 'recurrence' && $recurrenceResolved !== null) {
+                $segment['resolved'] = $recurrenceResolved;
+            }
+            $segments[] = $segment;
+            $i = $j;
+        }
+
+        return $segments;
+    }
+
+    /** Lowercased, edge-punctuation-stripped form for tolerant word matching. */
+    private function wordCore(string $word): string
+    {
+        return (string) preg_replace('/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/u', '', mb_strtolower($word));
+    }
+
+    /** "dinsdag 26 mei" */
+    private function dateLabel(CarbonImmutable $date): string
+    {
+        return $date->locale('nl')->isoFormat('dddd D MMMM');
+    }
+
+    /** "di 26 mei" */
+    private function shortLabel(CarbonImmutable $date): string
+    {
+        return $date->locale('nl')->isoFormat('ddd D MMM');
     }
 }

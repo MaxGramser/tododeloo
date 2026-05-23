@@ -24,6 +24,9 @@ struct MacTodoListView: View {
     var body: some View {
         VStack(spacing: 0) {
             quickAdd
+            ParsePreviewStrip(text: model.quickAddText)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
             list
         }
         .navigationTitle(model.title)

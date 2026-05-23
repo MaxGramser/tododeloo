@@ -217,6 +217,14 @@ final class APIClient {
         try await sendVoid(.delete, "recurrences/\(recurrenceId)")
     }
 
+    /// Live parse preview of a quick-add line — the highlightable segments.
+    func parsePreview(_ title: String) async throws -> ParsePreview {
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=?+")
+        let encoded = title.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        return try await send(.get, "quick-add/preview?title=\(encoded)")
+    }
+
     @discardableResult
     func quickAdd(title: String, listId: Int? = nil) async throws -> QuickAddResponse {
         var body: [String: Any] = ["title": title]

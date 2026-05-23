@@ -78,7 +78,8 @@ function formatDate(iso: string): string {
 
         <SidebarContent>
             <SidebarGroup class="px-2 py-0">
-                <SidebarGroupLabel class="font-mono text-[10px] tracking-widest uppercase"
+                <SidebarGroupLabel
+                    class="font-mono text-[10px] tracking-widest uppercase"
                     >focus</SidebarGroupLabel
                 >
                 <SidebarGroupContent>
@@ -182,7 +183,7 @@ function formatDate(iso: string): string {
                                     type="text"
                                     autofocus
                                     placeholder="Lijst naam..."
-                                    class="w-full rounded-md border border-input bg-background px-2 py-1 text-sm outline-none ring-ring focus:ring-2"
+                                    class="w-full rounded-md border border-input bg-background px-2 py-1 text-sm ring-ring outline-none focus:ring-2"
                                     @blur="submitCreateList"
                                     @keydown.escape="
                                         () => {
@@ -196,32 +197,23 @@ function formatDate(iso: string): string {
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>
-
-            <SidebarGroup class="px-2 py-0">
-                <SidebarGroupLabel
-                    class="font-mono text-[10px] tracking-widest uppercase"
-                    >ondersteuning</SidebarGroupLabel
-                >
-                <SidebarGroupContent>
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                as-child
-                                :is-active="isCurrentUrl('/help')"
-                                tooltip="Handleiding"
-                            >
-                                <Link href="/help">
-                                    <BookOpen />
-                                    <span>Handleiding</span>
-                                </Link>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroupContent>
-            </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        as-child
+                        :is-active="isCurrentUrl('/help')"
+                        tooltip="Handleiding"
+                    >
+                        <Link href="/help">
+                            <BookOpen />
+                            <span>Handleiding</span>
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
             <NavUser />
         </SidebarFooter>
     </Sidebar>

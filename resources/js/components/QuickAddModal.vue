@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { nextTick, ref, watch } from 'vue';
+import ParsePreview from '@/components/ParsePreview.vue';
 import { useQuickAddTarget } from '@/composables/useQuickAddTarget';
 
 const props = defineProps<{ open: boolean }>();
@@ -71,6 +72,9 @@ function submit() {
                         placeholder="Wat moet er gebeuren?"
                         class="w-full border-b border-input bg-transparent pb-2 text-xl font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground"
                     />
+                    <div class="min-h-[1.25rem] pt-3">
+                        <ParsePreview :title="title" />
+                    </div>
                     <div
                         class="flex items-center justify-between pt-3 font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                     >

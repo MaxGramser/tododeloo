@@ -243,6 +243,37 @@ struct UpcomingResponse: Codable {
     let days: [TodoList]
 }
 
+// MARK: - Quick-add parse preview
+
+/// One run of the typed sentence, tagged so the UI can highlight it. The same
+/// segment stream feeds web, iOS and Mac (see DutchDateParser::annotate).
+struct ParseSegment: Codable, Hashable {
+    let type: String // "date" | "recurrence" | "title" | "ignored"
+    let text: String
+    let resolved: String?
+}
+
+struct ParseDate: Codable, Hashable {
+    let iso: String
+    let label: String
+}
+
+struct ParseRecurrence: Codable, Hashable {
+    let rrule: String
+    let summary: String
+    let anchorIso: String
+    let anchorLabel: String
+}
+
+/// Live "how will this parse" preview for the quick-add field.
+struct ParsePreview: Codable, Hashable {
+    let input: String
+    let title: String
+    let date: ParseDate?
+    let recurrence: ParseRecurrence?
+    let segments: [ParseSegment]
+}
+
 struct TodayResponse: Codable {
     let date: String
     let isToday: Bool

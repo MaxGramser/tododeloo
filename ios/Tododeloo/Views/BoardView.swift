@@ -22,6 +22,10 @@ struct BoardView: View {
                 }
                 quickAddField
 
+                ParsePreviewStrip(text: model.quickAddText)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+
                 if let message = model.errorMessage {
                     errorBanner(message)
                 }

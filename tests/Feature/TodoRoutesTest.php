@@ -28,6 +28,17 @@ it('renders the help manual page', function () {
         ->assertInertia(fn ($page) => $page->component('Help'));
 });
 
+it('previews quick-add parsing as JSON', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $this->getJson(route('quick-add.preview', ['title' => 'morgen bellen']))
+        ->assertOk()
+        ->assertJsonPath('title', 'bellen')
+        ->assertJsonPath('date.iso', '2026-05-21');
+
+    CarbonImmutable::setTestNow();
+});
+
 it('renders the master list page with todos', function () {
     app(CreateTodo::class)($this->user, ['title' => 'Hallo']);
 

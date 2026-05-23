@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import ParsePreview from '@/components/ParsePreview.vue';
 import { useQuickAddTarget } from '@/composables/useQuickAddTarget';
 
 const title = ref('');
@@ -36,25 +37,28 @@ function submit() {
         class="hidden flex-1 items-center gap-2 md:flex"
         @submit.prevent="submit"
     >
-        <div
-            class="flex w-full max-w-2xl items-center gap-2 rounded-lg border border-input bg-card px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring"
-        >
-            <span
-                class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
-                >+</span
+        <div class="relative w-full max-w-2xl">
+            <div
+                class="flex items-center gap-2 rounded-lg border border-input bg-card px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring"
             >
-            <input
-                ref="inputRef"
-                v-model="title"
-                type="text"
-                :placeholder="`Snel toevoegen (⌘K)`"
-                class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <span
-                class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
-            >
-                → {{ target.label }}
-            </span>
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                    >+</span
+                >
+                <input
+                    ref="inputRef"
+                    v-model="title"
+                    type="text"
+                    :placeholder="`Snel toevoegen (⌘K)`"
+                    class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                >
+                    → {{ target.label }}
+                </span>
+            </div>
+            <ParsePreview :title="title" variant="panel" />
         </div>
     </form>
 </template>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DailyController;
 use App\Http\Controllers\Api\ListController;
 use App\Http\Controllers\Api\QuickAddController;
+use App\Http\Controllers\Api\QuickAddPreviewController;
 use App\Http\Controllers\Api\RecurrenceController;
 use App\Http\Controllers\Api\SubTodoController;
 use App\Http\Controllers\Api\TagController;
@@ -61,6 +62,7 @@ Route::middleware('auth:sanctum')->name('api.')->group(function () {
     Route::delete('sub-todos/{subTodo}', [SubTodoController::class, 'destroy'])->name('sub-todos.destroy');
 
     Route::post('quick-add', QuickAddController::class)->name('quick-add');
+    Route::get('quick-add/preview', QuickAddPreviewController::class)->name('quick-add.preview');
 
     Route::get('tags', [TagController::class, 'index'])->name('tags.index');
     Route::post('tags', [TagController::class, 'store'])->name('tags.store');

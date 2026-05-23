@@ -79,6 +79,17 @@ it('resets the ritual so the day drops back into the morning ritual', function (
     CarbonImmutable::setTestNow();
 });
 
+it('previews how a quick-add line will be parsed', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 9, 0));
+
+    $this->getJson(route('api.quick-add.preview', ['title' => 'dinsdag de lamp aanpassen']))
+        ->assertOk()
+        ->assertJsonPath('date.iso', '2026-05-26')
+        ->assertJsonPath('segments.0.type', 'date');
+
+    CarbonImmutable::setTestNow();
+});
+
 it('creates a todo and attaches it to master', function () {
     $this->postJson(route('api.todos.store'), ['title' => 'Boodschappen'])
         ->assertOk()

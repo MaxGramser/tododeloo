@@ -73,7 +73,7 @@ final class GlobalHotKey {
 
 /// Lazily-built floating panel that hosts the SwiftUI capture field.
 final class CapturePanelController {
-    private var panel: NSPanel?
+    private var panel: CapturePanel?
 
     func toggle() {
         if let panel, panel.isVisible {
@@ -84,27 +84,47 @@ final class CapturePanelController {
     }
 
     private func present() {
-        if panel == nil {
-            let view = CaptureView { [weak self] in self?.panel?.orderOut(nil) }
-            let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 460, height: 76),
-                styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
-                backing: .buffered,
-                defer: false
-            )
-            panel.titleVisibility = .hidden
-            panel.titlebarAppearsTransparent = true
-            panel.isMovableByWindowBackground = true
-            panel.isFloatingPanel = true
-            panel.level = .floating
-            panel.hidesOnDeactivate = true
-            panel.contentViewController = NSHostingController(rootView: view)
-            self.panel = panel
-        }
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        panel?.center()
-        panel?.makeKeyAndOrderFront(nil)
+        let panel = panel ?? makePanel()
+        self.panel = panel
+
+        // Rebuild the SwiftUI content on every open so the field starts empty and
+        // its `.onAppear` fires again — that re-request is what lands the cursor in
+        // the field. A reused view's `.onAppear` only fires once, so focus would be
+        // lost on the second and later opens.
+        panel.contentViewController = NSHostingController(
+            rootView: CaptureView { [weak self] in self?.panel?.orderOut(nil) }
+        )
+
+        NSApp.activate(ignoringOtherApps: true)
+        panel.center()
+        panel.makeKeyAndOrderFront(nil)
     }
+
+    private func makePanel() -> CapturePanel {
+        let panel = CapturePanel(
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 76),
+            styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.titleVisibility = .hidden
+        panel.titlebarAppearsTransparent = true
+        panel.isMovableByWindowBackground = true
+        panel.isFloatingPanel = true
+        panel.level = .floating
+        panel.hidesOnDeactivate = true
+
+        return panel
+    }
+}
+
+/// A panel that is allowed to take keyboard focus. A `.nonactivatingPanel` does not
+/// become the key window by default, so `makeKeyAndOrderFront` alone leaves the
+/// capture field unable to become first responder — typing would go nowhere.
+/// Opting in here is what makes the cursor actually land in the field.
+final class CapturePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 }
 
 /// The capture field itself: type a todo, press return, it lands via /quick-add
@@ -116,23 +136,30 @@ struct CaptureView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        HStack(spacing: 12) {
-            AccentDot(size: 8)
-            TextField("Snel toevoegen aan Tododeloo…", text: $text)
-                .textFieldStyle(.plain)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.ink)
-                .focused($focused)
-                .onSubmit(submit)
-            if isBusy {
-                ProgressView().controlSize(.small)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                AccentDot(size: 8)
+                TextField("Snel toevoegen aan Tododeloo…", text: $text)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                    .focused($focused)
+                    .onSubmit(submit)
+                if isBusy {
+                    ProgressView().controlSize(.small)
+                }
             }
+            ParsePreviewStrip(text: text)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
         .frame(width: 460)
         .background(Theme.background)
-        .onAppear { focused = true }
+        .onAppear {
+            // Defer one runloop tick: makeKeyAndOrderFront has run by now, so the
+            // panel is key and the focus request actually sticks.
+            DispatchQueue.main.async { focused = true }
+        }
         .onExitCommand(perform: onClose)
     }
 

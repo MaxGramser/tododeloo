@@ -11,6 +11,11 @@ struct MacMenuBarContent: View {
         VStack(alignment: .leading, spacing: 0) {
             header
             quickAdd
+            if !model.quickAddText.trimmingCharacters(in: .whitespaces).isEmpty {
+                ParsePreviewStrip(text: model.quickAddText)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 10)
+            }
             Divider().padding(.horizontal, 14)
             body(for: phase)
             Divider().padding(.horizontal, 14)

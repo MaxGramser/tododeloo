@@ -9,6 +9,7 @@ use App\Http\Controllers\ListReorderController;
 use App\Http\Controllers\ListSortModeController;
 use App\Http\Controllers\MasterListController;
 use App\Http\Controllers\QuickAddController;
+use App\Http\Controllers\QuickAddPreviewController;
 use App\Http\Controllers\RecurrenceController;
 use App\Http\Controllers\SubTodoController;
 use App\Http\Controllers\TagController;
@@ -82,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('sub-todos/{subTodo}', [SubTodoController::class, 'destroy'])->name('sub-todos.destroy');
 
     Route::post('quick-add', QuickAddController::class)->name('quick-add');
+    Route::get('quick-add/preview', QuickAddPreviewController::class)->name('quick-add.preview');
 
     Route::post('tags', [TagController::class, 'store'])->name('tags.store');
     Route::delete('tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');

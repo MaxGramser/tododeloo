@@ -80,3 +80,50 @@ it('produces rrules that match the recurrence presets', function () {
     $tuesday = parseNL('elke dinsdag x')['recurrence'];
     expect($presets->describe($tuesday['rrule'], $tuesday['anchor'])['preset'])->toBe('weekly');
 });
+
+function annotateNL(string $input): array
+{
+    return app(DutchDateParser::class)->annotate($input, CarbonImmutable::parse('2026-05-20'));
+}
+
+it('annotates a sentence into highlightable segments that reproduce the input', function () {
+    $result = annotateNL('maak een todo aan voor dinsdag dat ik de lamp moet aanpassen');
+
+    expect($result['date']['iso'])->toBe('2026-05-26');
+
+    $segments = collect($result['segments']);
+
+    // Concatenating every segment reproduces the (normalized) input verbatim.
+    expect($segments->pluck('text')->implode(''))->toBe($result['input']);
+
+    $date = $segments->firstWhere('type', 'date');
+    expect($date)->not->toBeNull()
+        ->and($date['text'])->toContain('dinsdag')
+        ->and($date['resolved'])->toContain('dinsdag');
+
+    expect($segments->pluck('type'))->toContain('title');
+});
+
+it('marks an undated task entirely as title', function () {
+    $result = annotateNL('boodschappen doen');
+
+    expect($result['date'])->toBeNull()
+        ->and($result['recurrence'])->toBeNull();
+
+    $segments = collect($result['segments']);
+    expect($segments->pluck('type')->unique()->values()->all())->toBe(['title'])
+        ->and($segments->pluck('text')->implode(''))->toBe('boodschappen doen');
+});
+
+it('annotates a recurrence phrase with its summary', function () {
+    $result = annotateNL('elke werkdag stand-up');
+
+    expect($result['recurrence']['rrule'])->toBe('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR');
+
+    $segments = collect($result['segments']);
+    $recurrence = $segments->firstWhere('type', 'recurrence');
+    expect($recurrence)->not->toBeNull()
+        ->and($recurrence['text'])->toContain('werkdag')
+        ->and($recurrence['resolved'])->toContain('werkdag')
+        ->and($segments->pluck('text')->implode(''))->toBe($result['input']);
+});
