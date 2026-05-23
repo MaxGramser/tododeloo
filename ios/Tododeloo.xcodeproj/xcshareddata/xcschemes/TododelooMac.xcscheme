@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "096D86ED69A94E305050CC54"
+               BlueprintIdentifier = "ED2C528B3B102C3FEFA025E6"
                BuildableName = "TododelooMac.app"
                BlueprintName = "TododelooMac"
                ReferencedContainer = "container:Tododeloo.xcodeproj">
@@ -30,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "096D86ED69A94E305050CC54"
+            BlueprintIdentifier = "ED2C528B3B102C3FEFA025E6"
             BuildableName = "TododelooMac.app"
             BlueprintName = "TododelooMac"
             ReferencedContainer = "container:Tododeloo.xcodeproj">
@@ -53,7 +53,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "096D86ED69A94E305050CC54"
+            BlueprintIdentifier = "ED2C528B3B102C3FEFA025E6"
             BuildableName = "TododelooMac.app"
             BlueprintName = "TododelooMac"
             ReferencedContainer = "container:Tododeloo.xcodeproj">
@@ -70,7 +70,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "096D86ED69A94E305050CC54"
+            BlueprintIdentifier = "ED2C528B3B102C3FEFA025E6"
             BuildableName = "TododelooMac.app"
             BlueprintName = "TododelooMac"
             ReferencedContainer = "container:Tododeloo.xcodeproj">

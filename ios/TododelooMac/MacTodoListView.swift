@@ -119,6 +119,8 @@ struct MacTodoListView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(Theme.background)
+        .animation(.snappy(duration: 0.25), value: model.visibleTodos)
+        .animation(.easeInOut(duration: 0.12), value: selectedTodoID)
         .onDeleteCommand(perform: deleteSelected)
         .onMoveCommand(perform: moveSelection)
         .onChange(of: selectedTodoID) { _, newID in
@@ -334,6 +336,7 @@ struct MacTodoRow: View {
                 Image(systemName: todo.isCompleted ? "largecircle.fill.circle" : "circle")
                     .font(.system(size: 16))
                     .foregroundStyle(toggleColor)
+                    .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
         }

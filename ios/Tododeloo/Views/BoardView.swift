@@ -27,6 +27,9 @@ struct BoardView: View {
                 }
 
                 content
+                    // Reorder when a todo gets completed, fade on add/remove —
+                    // the standard SwiftUI list-diff animation.
+                    .animation(.snappy(duration: 0.28), value: model.visibleTodos)
             }
             .padding(.bottom, 40)
         }
@@ -142,6 +145,7 @@ struct BoardView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
+        .animation(.easeInOut(duration: 0.2), value: model.isViewingToday)
     }
 
     // MARK: - Quick add

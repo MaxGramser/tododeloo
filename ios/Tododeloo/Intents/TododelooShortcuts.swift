@@ -19,6 +19,24 @@ struct TododelooShortcuts: AppShortcutsProvider {
             shortTitle: "Snel toevoegen",
             systemImageName: "plus.circle.fill"
         )
+        AppShortcut(
+            intent: CompleteTodoIntent(),
+            phrases: [
+                "Markeer een taak af in \(.applicationName)",
+                "Rond een taak af in \(.applicationName)",
+            ],
+            shortTitle: "Markeer af",
+            systemImageName: "checkmark.circle.fill"
+        )
+        AppShortcut(
+            intent: TodaySummaryIntent(),
+            phrases: [
+                "Wat staat er vandaag in \(.applicationName)",
+                "Mijn taken voor vandaag in \(.applicationName)",
+            ],
+            shortTitle: "Vandaag",
+            systemImageName: "sun.max.fill"
+        )
     }
 
     static var shortcutTileColor: ShortcutTileColor = .orange

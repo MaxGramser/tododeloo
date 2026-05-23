@@ -5,6 +5,7 @@ import SwiftUI
 /// NavigationSplitView with a sidebar, a todo list, and a detail inspector.
 @main
 struct TododelooMacApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var session = Session()
 
     var body: some Scene {
@@ -16,6 +17,14 @@ struct TododelooMacApp: App {
         }
         .defaultSize(width: 1120, height: 720)
         .commands { BoardCommands() }
+
+        // Menu-bar mini list: today at a glance + quick-add, without the window.
+        MenuBarExtra("Tododeloo", systemImage: "checklist") {
+            MacMenuBarContent()
+                .environment(session)
+                .tint(Theme.accent)
+        }
+        .menuBarExtraStyle(.window)
 
         Settings {
             MacSettingsView()

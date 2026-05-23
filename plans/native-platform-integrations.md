@@ -51,17 +51,17 @@ Native (geen webwrapper) · gedeelde core · editorial design · **ochtendrituee
    hernoem ⌘R, verplaats ⌘D, verwijder ⌘⌫), "Ga"-menu (Vandaag/Alles/Binnenkort
    ⌘1–3, dag ± ⌘[ ⌘], ritueel opnieuw ⌘⇧R). Via `focusedSceneValue`.
 
-2. **MenuBarExtra (status-item)** — _impact: hoog · effort: M_
-   Klein dropdown-venster in de menubalk: vandaag's open todos, één-regel quick-add,
-   "start/​reset ritueel", afvinken zonder het hoofdvenster te openen. Dé TickTick-
-   feature. SwiftUI `MenuBarExtra`-scene; hergebruikt `BoardModel`/`UpcomingModel`.
+2. **✅ MenuBarExtra (status-item)** _(gedaan, 2026-05-23)_
+   Dropdown in de menubalk: vandaag's open todos (afvinken inline), één-regel
+   quick-add, "Open Tododeloo" en "Ritueel opnieuw". `MenuBarExtra(.window)`-scene
+   die de gedeelde `BoardModel` hergebruikt.
 
-3. **Globale quick-capture-hotkey** — _impact: hoog · effort: M_
-   Systeembrede sneltoets (bv. ⌥Space) opent een zwevend capture-veldje, waar je
-   ook bent (Akiflow). Landt via `/quick-add` (Dutch parser pakt datum/recurrence).
-   Vereist een global hotkey-monitor (los pakket of `NSEvent.addGlobalMonitor`).
+3. **✅ Globale quick-capture-hotkey** _(gedaan, 2026-05-23)_
+   Systeembrede **⌃⌥⌘Space** opent een zwevend capture-paneel waar je ook bent
+   (Akiflow); landt via `/quick-add` (Dutch parser). Carbon `RegisterEventHotKey`
+   + een floating `NSPanel` (de Mac-app is non-sandboxed, dus geen extra permissie).
 
-4. **Services-menu + Deel-extensie** — _impact: middel · effort: S–M_
+4. **Services-menu + Deel-extensie** — _impact: middel · effort: S–M · ⏳ nog te doen_
    "Voeg toe aan Tododeloo" op geselecteerde tekst in élke app → todo. Via App
    Intents/Services. Mac-tegenhanger van de iOS share-extensie.
 
@@ -92,10 +92,11 @@ Native (geen webwrapper) · gedeelde core · editorial design · **ochtendrituee
 5. **Share-extensie** — _impact: middel · effort: M_
    Tekst/URL/afbeelding uit andere apps delen → todo (Reminders-achtig).
 
-6. **App Intents uitbreiden tot een echte intent-suite** — _impact: hoog · effort: M_
-   Naast quick-add: "markeer X af", "open vandaag", "wat staat er vandaag",
-   "verplaats X naar morgen". Met `AppEntity` (TodoEntity/ListEntity) zodat Siri,
-   Shortcuts én Spotlight todos als objecten kennen. Herbruikt API + actions.
+6. **✅ App Intents uitbreiden tot een echte intent-suite** _(gedaan, 2026-05-23)_
+   `TodoEntity` (AppEntity) + `CompleteTodoIntent` ("markeer X af") +
+   `TodaySummaryIntent` ("wat staat er vandaag"), bovenop de bestaande quick-add,
+   met Siri-zinnen. Volgende stap: navigatie-intents ("open vandaag/Binnenkort")
+   zodra er een gedeelde navigatie-state is.
 
 7. **Focus-filters** — _impact: middel · effort: S–M_
    Koppel een lijst aan een Focus-modus (Werk → werklijst, Privé → master).

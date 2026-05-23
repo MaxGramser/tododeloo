@@ -18,6 +18,7 @@ struct UpcomingView: View {
                     errorBanner(message)
                 }
                 content
+                    .animation(.snappy(duration: 0.28), value: model.days)
             }
             .padding(.bottom, 40)
         }

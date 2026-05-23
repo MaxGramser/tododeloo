@@ -90,6 +90,7 @@ final class BoardModel {
     }
 
     var openCount: Int { todos.filter { !$0.isCompleted }.count }
+    var openTodos: [Todo] { todos.filter { !$0.isCompleted } }
 
     // MARK: - Day navigation (Today board)
 

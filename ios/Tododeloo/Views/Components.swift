@@ -95,8 +95,11 @@ struct CompletionToggle: View {
                 Circle()
                     .fill(Theme.accent)
                     .frame(width: 13, height: 13)
+                    // A springy fill on check-off, à la Reminders.
+                    .transition(.scale.combined(with: .opacity))
             }
         }
+        .animation(.spring(response: 0.32, dampingFraction: 0.58), value: isCompleted)
     }
 
     private var ringColor: Color {
