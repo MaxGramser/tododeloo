@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Todos\QuickAddTodo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class QuickAddController extends Controller
 {
@@ -19,7 +20,13 @@ class QuickAddController extends Controller
             ? $request->user()->lists()->find($validated['list_id'])
             : null;
 
-        $quickAdd($request->user(), $validated['title'], $contextList);
+        $result = $quickAdd($request->user(), $validated['title'], $contextList);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $result['feedback']['message'],
+            'description' => $result['feedback']['description'],
+        ]);
 
         return back();
     }

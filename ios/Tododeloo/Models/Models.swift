@@ -214,7 +214,21 @@ struct ListResponse: Codable { let list: TodoList }
 struct ListsResponse: Codable { let lists: [ListSummary] }
 struct TagResponse: Codable { let tag: Tag }
 struct TagsResponse: Codable { let tags: [Tag] }
-struct QuickAddResponse: Codable { let todo: Todo; let targetDate: String? }
+struct QuickAddResponse: Codable {
+    let todo: Todo
+    let targetDate: String?
+    /// Human-readable confirmation of what the parser scheduled. Optional so the
+    /// app still decodes against a backend that predates this field.
+    let feedback: QuickAddFeedback?
+}
+
+/// Backend-built confirmation copy, shared verbatim by web, iOS/Mac and Siri.
+struct QuickAddFeedback: Codable, Hashable {
+    /// The quoted todo title, e.g. `"Bel de dokter"`.
+    let message: String
+    /// Where it landed, e.g. "ingepland voor volgende week dinsdag".
+    let description: String?
+}
 
 struct TodayResponse: Codable {
     let date: String

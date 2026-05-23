@@ -1,26 +1,52 @@
 #!/usr/bin/env bash
-# Build a signed Mac (Catalyst) app and package it into a DMG, mirroring the
-# tuneflow approach: xcodebuild archive → exportArchive (Developer ID) →
-# hdiutil DMG → optional notarize + staple.
+# Build a signed native macOS app and package it into a DMG (+ a zip), mirroring
+# the tuneflow approach: xcodebuild archive → exportArchive (Developer ID) →
+# hdiutil DMG → optional notarize + staple → zip.
+#
+# This repo is public, so no signing config lives here. The Apple Team ID is read
+# from the git-ignored Config/Local.xcconfig (the same file Xcode signs with), or
+# from the DEVELOPMENT_TEAM env var; the Developer ID Application identity is
+# auto-detected from your keychain. The notary credentials live only in the
+# keychain (never in git).
 #
 # Usage:
 #   ./build-mac-dmg.sh
 #   NOTARY_PROFILE=<keychain-profile> ./build-mac-dmg.sh   # also notarize+staple
 #
-# Set up the keychain profile once with:
-#   xcrun notarytool store-credentials <name> --apple-id <id> --team-id 75C95MRFQ9 --password <app-specific-pw>
+# One-time notary setup (stores an app-specific password in the keychain):
+#   xcrun notarytool store-credentials <name> --apple-id <id> --team-id <TEAMID> --password <app-specific-pw>
 set -euo pipefail
 cd "$(dirname "$0")"
 
 SCHEME="TododelooMac"
 PROJECT="Tododeloo.xcodeproj"
-TEAM_ID="75C95MRFQ9"
-SIGNING_IDENTITY="Developer ID Application: Fabrique Stereotique (75C95MRFQ9)"
+
+# --- Resolve the Team ID without committing it ------------------------------
+TEAM_ID="${DEVELOPMENT_TEAM:-}"
+if [ -z "$TEAM_ID" ] && [ -f Config/Local.xcconfig ]; then
+    TEAM_ID="$(sed -n 's/^[[:space:]]*DEVELOPMENT_TEAM[[:space:]]*=[[:space:]]*//p' Config/Local.xcconfig | tr -d '[:space:]')"
+fi
+if [ -z "$TEAM_ID" ]; then
+    echo "✗ Geen Team ID gevonden. Zet DEVELOPMENT_TEAM in ios/Config/Local.xcconfig of als env var." >&2
+    exit 1
+fi
+
+# --- Auto-detect the Developer ID Application identity for this team ---------
+SIGNING_IDENTITY="$(security find-identity -v -p codesigning \
+    | grep "Developer ID Application" | grep "($TEAM_ID)" \
+    | head -1 | sed -E 's/^[^"]*"([^"]+)".*/\1/')"
+if [ -z "$SIGNING_IDENTITY" ]; then
+    echo "✗ Geen 'Developer ID Application' certificaat voor team $TEAM_ID in de keychain." >&2
+    exit 1
+fi
+echo "→ Signing identity: $SIGNING_IDENTITY"
+
 BUILD_DIR="/tmp/tododeloo-macdmg"
 ARCHIVE="$BUILD_DIR/Tododeloo.xcarchive"
 EXPORT_DIR="$BUILD_DIR/export"
 STAGING="$BUILD_DIR/staging"
 FINAL_DMG="$HOME/Desktop/Tododeloo.dmg"
+FINAL_ZIP="$HOME/Desktop/Tododeloo.dmg.zip"
 
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
@@ -70,4 +96,10 @@ else
     echo "  (notarisatie overgeslagen — zet NOTARY_PROFILE om te notariseren)"
 fi
 
-echo "✓ Klaar: $FINAL_DMG"
+echo "→ Zippen…"
+rm -f "$FINAL_ZIP"
+ditto -c -k "$FINAL_DMG" "$FINAL_ZIP"
+
+echo "✓ Klaar:"
+echo "   $FINAL_DMG"
+echo "   $FINAL_ZIP"

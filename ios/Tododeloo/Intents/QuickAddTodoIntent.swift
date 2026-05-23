@@ -36,15 +36,24 @@ struct QuickAddTodoIntent: AppIntent {
 
         do {
             let response = try await APIClient.shared.quickAdd(title: trimmed)
-            return .result(dialog: IntentDialog(stringLiteral: confirmation(for: trimmed, on: response.targetDate)))
+            return .result(dialog: IntentDialog(stringLiteral: confirmation(for: trimmed, response: response)))
         } catch {
             let reason = (error as? APIError)?.errorDescription ?? "Er ging iets mis."
             return .result(dialog: IntentDialog(stringLiteral: reason))
         }
     }
 
-    private func confirmation(for title: String, on targetDate: String?) -> String {
-        guard let targetDate else {
+    /// Prefer the backend-built copy so Siri says the same thing the app shows
+    /// ("Sport herhaalt elke dag."); fall back for backends without `feedback`.
+    private func confirmation(for title: String, response: QuickAddResponse) -> String {
+        if let feedback = response.feedback {
+            guard let detail = feedback.description else {
+                return "\(feedback.message)."
+            }
+            return "\(feedback.message) \(detail)."
+        }
+
+        guard let targetDate = response.targetDate else {
             return "Toegevoegd: \(title)."
         }
         if targetDate == DateText.ymd(Date()) {

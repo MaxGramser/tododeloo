@@ -36,6 +36,7 @@ struct MacContentView: View {
                 .navigationSplitViewColumnWidth(min: 290, ideal: 330, max: 460)
         }
         .navigationSplitViewStyle(.balanced)
+        .toastHost()
         .task {
             lists.onUnauthorized = { session.handleUnauthorized() }
             board.onUnauthorized = { session.handleUnauthorized() }

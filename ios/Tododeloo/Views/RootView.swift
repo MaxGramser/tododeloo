@@ -19,6 +19,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .toastHost()
         .animation(.easeInOut(duration: 0.25), value: stateKey)
         .task {
             if session.state == .loading {

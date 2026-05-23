@@ -31,6 +31,7 @@ class QuickAddController extends Controller
         return [
             'todo' => TodoResource::make($result['todo']->load(['tags', 'lists', 'subTodos', 'recurrence']))->resolve(),
             'target_date' => $result['target_date']?->toDateString(),
+            'feedback' => $result['feedback'],
         ];
     }
 }

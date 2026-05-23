@@ -196,8 +196,11 @@ final class BoardModel {
             // runs. Passing the current list makes a date-less todo land on the
             // page you're on (today / master / this custom list); an explicit
             // date or recurrence in the text still wins.
-            _ = try await api.quickAdd(title: title, listId: listId)
+            let response = try await api.quickAdd(title: title, listId: listId)
             await load()
+            if let feedback = response.feedback {
+                ToastCenter.shared.show(feedback.message, detail: feedback.description)
+            }
         } catch {
             todos.removeAll { $0.id == draft.id }
             handle(error)

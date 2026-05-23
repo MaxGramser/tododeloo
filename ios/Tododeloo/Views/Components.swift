@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 extension Color {
     /// Parses `#rrggbb` (or `rrggbb`) hex strings; nil for anything else.
@@ -160,5 +163,100 @@ struct SheetScaffold<Content: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.background)
         .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Toast
+
+/// A transient confirmation banner. Reusable across the app: call
+/// `ToastCenter.shared.show(...)` from anywhere and host the UI once near the
+/// app root with `.toastHost()`. First used to surface what the quick-add
+/// parser scheduled ("ingepland voor volgende week dinsdag").
+struct ToastMessage: Identifiable, Equatable {
+    let id = UUID()
+    let message: String
+    let detail: String?
+}
+
+@MainActor
+@Observable
+final class ToastCenter {
+    static let shared = ToastCenter()
+
+    private(set) var current: ToastMessage?
+    private var dismissTask: Task<Void, Never>?
+
+    func show(_ message: String, detail: String? = nil) {
+        #if canImport(UIKit)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        #endif
+        current = ToastMessage(message: message, detail: detail)
+        dismissTask?.cancel()
+        dismissTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            if !Task.isCancelled { self?.current = nil }
+        }
+    }
+
+    func dismiss() {
+        dismissTask?.cancel()
+        dismissTask = nil
+        current = nil
+    }
+}
+
+private struct ToastBanner: View {
+    let toast: ToastMessage
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            AccentDot(size: 8)
+                .padding(.top, 5)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(toast.message)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                if let detail = toast.detail {
+                    Text(detail)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.muted)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 13)
+        .background(Theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Theme.hairline, lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.14), radius: 18, y: 8)
+        .frame(maxWidth: 440)
+    }
+}
+
+private struct ToastHostModifier: ViewModifier {
+    @State private var toasts = ToastCenter.shared
+
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .bottom) {
+            if let toast = toasts.current {
+                ToastBanner(toast: toast)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .onTapGesture { toasts.dismiss() }
+            }
+        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: toasts.current)
+    }
+}
+
+extension View {
+    /// Hosts the shared `ToastCenter` UI. Attach once near the app root.
+    func toastHost() -> some View {
+        modifier(ToastHostModifier())
     }
 }
