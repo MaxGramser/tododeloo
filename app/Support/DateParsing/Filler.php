@@ -38,6 +38,8 @@ final class Filler
             '/^plan(?:\s+in)?\s+om\s+/iu',
             '/^plan\s+in\s+/iu',
             '/^inplannen\s*[:\-]?\s*/iu',
+            '/^(?:uiterlijk|ten\s+laatste)\s+/iu',
+            '/^deadline\s*[:\-–]?\s*/iu',
         ];
 
         return self::loopStrip($text, $patterns);
@@ -51,7 +53,7 @@ final class Filler
             '/^(?:een|de|het)\s+(?:to-?do|taak)\b\s*/iu',
             '/^herinner(?:ing|en)?\s*(?:me|mij)?\s*(?:aan|voor|om)\b\s*/iu',
             '/^om\s+te\b\s*/iu',
-            '/^(?:om|aan|voor|op|met|dat|dan|te|eraan|er\s+aan)\b\s*/iu',
+            '/^(?:om|aan|voor|op|met|dat|dan|te|vanaf|eraan|er\s+aan)\b\s*/iu',
         ];
 
         return self::loopStrip($text, $patterns);

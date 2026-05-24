@@ -91,7 +91,7 @@ class RecurrencePresets
         return match ($parts['FREQ'] ?? '') {
             'DAILY' => $interval === 1 ? 'Elke dag' : "Elke {$interval} dagen",
             'WEEKLY' => $this->describeWeekly($interval, $parts['BYDAY'] ?? null),
-            'MONTHLY' => $this->describeMonthly($interval, $parts['BYDAY'] ?? null, $parts['BYMONTHDAY'] ?? null),
+            'MONTHLY' => $this->describeMonthly($interval, $parts['BYDAY'] ?? null, $parts['BYMONTHDAY'] ?? null, $parts['BYSETPOS'] ?? null),
             'YEARLY' => $interval === 1 ? 'Elk jaar' : "Elke {$interval} jaar",
             default => 'Herhaalt',
         };
@@ -114,8 +114,15 @@ class RecurrencePresets
         return $interval === 1 ? "Elke {$days}" : "Elke {$interval} weken op {$days}";
     }
 
-    private function describeMonthly(int $interval, ?string $byDay, ?string $byMonthDay): string
+    private function describeMonthly(int $interval, ?string $byDay, ?string $byMonthDay, ?string $bySetPos = null): string
     {
+        // The first/last workday of the month: BYDAY=MO..FR + BYSETPOS=±1.
+        if ($bySetPos !== null && $bySetPos !== '' && $byDay === 'MO,TU,WE,TH,FR') {
+            $where = 'op de '.((int) $bySetPos < 0 ? 'laatste' : 'eerste').' werkdag';
+
+            return $interval === 1 ? "Maandelijks {$where}" : "Elke {$interval} maanden {$where}";
+        }
+
         if ($byDay !== null && $byDay !== '' && preg_match('/^(-?\d+)([A-Z]{2})$/', $byDay, $m)) {
             $where = 'op de '.$this->ordinalFor((int) $m[1]).' '.$this->labelForCode($m[2]);
 
@@ -123,7 +130,7 @@ class RecurrencePresets
         }
 
         if ($byMonthDay !== null && $byMonthDay !== '') {
-            $where = "op de {$byMonthDay}e";
+            $where = $byMonthDay === '-1' ? 'op de laatste dag' : "op de {$byMonthDay}e";
 
             return $interval === 1 ? "Maandelijks {$where}" : "Elke {$interval} maanden {$where}";
         }

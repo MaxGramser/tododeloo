@@ -9,7 +9,8 @@ use Carbon\CarbonImmutable;
 
 /**
  * A day inside a calendar month, or a bare month/year jump: "volgende maand de
- * 1e", "de 15e van volgende maand", "volgende maand", "volgend jaar".
+ * 1e", "de 15e van volgende maand", a bare "de 15e" (this month or next),
+ * "volgende maand", "volgend jaar".
  */
 class MonthDayRule extends Rule
 {
@@ -28,6 +29,11 @@ class MonthDayRule extends Rule
         }
         if ($this->find($text, '/\bvolgend(?:e)?\s+jaar\b/iu', $m)) {
             return RuleMatch::date($m, $today->addYear());
+        }
+        // Bare "de 15e" → that day this month, or next month if it already passed.
+        // The ordinal suffix is required so "de 3 honden" is not read as a date.
+        if ($this->find($text, '/\b(?:op\s+)?de\s+(\d{1,2})(?:e|ste|de)\b/iu', $m)) {
+            return RuleMatch::date($m, Clock::nextDayOfMonth($today, (int) $m[1][0]));
         }
 
         return null;

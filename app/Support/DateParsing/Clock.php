@@ -120,4 +120,83 @@ final class Clock
 
         return $today;
     }
+
+    /**
+     * A part ("begin" = 1st, "half" = 15th, "eind" = last day) of a named month,
+     * this year or next if it already passed.
+     */
+    public static function monthPart(CarbonImmutable $today, int $month, string $part): CarbonImmutable
+    {
+        $build = function (int $year) use ($month, $part, $today): CarbonImmutable {
+            $first = CarbonImmutable::create($year, $month, 1, 0, 0, 0, $today->timezone);
+
+            return match ($part) {
+                'begin' => $first,
+                'half' => $first->day(15),
+                default => $first->endOfMonth()->startOfDay(),
+            };
+        };
+
+        $date = $build($today->year);
+
+        return $date->lt($today) ? $build($today->year + 1) : $date;
+    }
+
+    /** The upcoming 1st of a month: this month if still ahead, otherwise next month. */
+    public static function beginOfMonth(CarbonImmutable $today): CarbonImmutable
+    {
+        $first = $today->startOfMonth();
+
+        return $first->lt($today) ? $first->addMonth() : $first;
+    }
+
+    /** The last day of the current month. */
+    public static function endOfMonth(CarbonImmutable $today): CarbonImmutable
+    {
+        return $today->endOfMonth()->startOfDay();
+    }
+
+    /** The upcoming 1 January (next year unless today is already 1 January). */
+    public static function beginOfYear(CarbonImmutable $today): CarbonImmutable
+    {
+        $first = $today->startOfYear();
+
+        return $first->lt($today) ? $first->addYear() : $first;
+    }
+
+    /** 31 December of the current year. */
+    public static function endOfYear(CarbonImmutable $today): CarbonImmutable
+    {
+        return $today->endOfYear()->startOfDay();
+    }
+
+    /** The day-of-month $day on or after today (this month, else next), clamped to the month length. */
+    public static function nextDayOfMonth(CarbonImmutable $today, int $day): CarbonImmutable
+    {
+        $on = fn (CarbonImmutable $base): CarbonImmutable => $base->day(min($day, $base->daysInMonth))->startOfDay();
+
+        $candidate = $on($today);
+
+        return $candidate->lt($today) ? $on($today->startOfMonth()->addMonth()) : $candidate;
+    }
+
+    /** First (or last) Mon–Fri of $base's month. */
+    public static function workdayOfMonth(CarbonImmutable $base, bool $last): CarbonImmutable
+    {
+        $date = $last ? $base->endOfMonth()->startOfDay() : $base->startOfMonth();
+        $step = $last ? -1 : 1;
+        while (! $date->isWeekday()) {
+            $date = $date->addDays($step);
+        }
+
+        return $date;
+    }
+
+    /** The first/last workday of the month on or after today, repeating monthly. */
+    public static function upcomingMonthlyWorkday(CarbonImmutable $today, bool $last): CarbonImmutable
+    {
+        $candidate = self::workdayOfMonth($today, $last);
+
+        return $candidate->lt($today) ? self::workdayOfMonth($today->startOfMonth()->addMonth(), $last) : $candidate;
+    }
 }

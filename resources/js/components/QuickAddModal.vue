@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { nextTick, ref, watch } from 'vue';
+import ParseModeToggle from '@/components/ParseModeToggle.vue';
 import ParsePreview from '@/components/ParsePreview.vue';
 import { useQuickAddTarget } from '@/composables/useQuickAddTarget';
 
@@ -8,6 +9,7 @@ const props = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: 'update:open', value: boolean): void }>();
 
 const title = ref('');
+const parseEnabled = ref(true);
 const submitting = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 const { target } = useQuickAddTarget();
@@ -17,6 +19,7 @@ watch(
     (open) => {
         if (open) {
             title.value = '';
+            parseEnabled.value = true;
             nextTick(() => inputRef.value?.focus());
         }
     },
@@ -33,7 +36,11 @@ function submit() {
     submitting.value = true;
     router.post(
         '/quick-add',
-        { title: title.value.trim(), list_id: target.value.listId },
+        {
+            title: title.value.trim(),
+            list_id: target.value.listId,
+            parse: parseEnabled.value,
+        },
         {
             preserveScroll: true,
             preserveState: true,
@@ -63,7 +70,10 @@ function submit() {
                         class="flex items-center justify-between pb-3 font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                     >
                         <span>Quick add</span>
-                        <span>→ {{ target.label }}</span>
+                        <span class="flex items-center gap-3">
+                            <ParseModeToggle v-model="parseEnabled" />
+                            <span>→ {{ target.label }}</span>
+                        </span>
                     </div>
                     <input
                         ref="inputRef"
@@ -73,7 +83,7 @@ function submit() {
                         class="w-full border-b border-input bg-transparent pb-2 text-xl font-semibold outline-none placeholder:font-normal placeholder:text-muted-foreground"
                     />
                     <div class="min-h-[1.25rem] pt-3">
-                        <ParsePreview :title="title" />
+                        <ParsePreview :title="title" :parse="parseEnabled" />
                     </div>
                     <div
                         class="flex items-center justify-between pt-3 font-mono text-[10px] tracking-widest text-muted-foreground uppercase"

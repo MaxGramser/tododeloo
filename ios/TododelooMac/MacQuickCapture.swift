@@ -132,6 +132,7 @@ final class CapturePanel: NSPanel {
 struct CaptureView: View {
     let onClose: () -> Void
     @State private var text = ""
+    @State private var parse = true
     @State private var isBusy = false
     @FocusState private var focused: Bool
 
@@ -145,11 +146,12 @@ struct CaptureView: View {
                     .foregroundStyle(Theme.ink)
                     .focused($focused)
                     .onSubmit(submit)
+                ParseModeToggle(parsing: $parse)
                 if isBusy {
                     ProgressView().controlSize(.small)
                 }
             }
-            ParsePreviewStrip(text: text)
+            ParsePreviewStrip(text: text, parse: parse)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 18)
@@ -169,7 +171,7 @@ struct CaptureView: View {
         guard APIClient.shared.isAuthenticated else { onClose(); return }
         isBusy = true
         Task {
-            _ = try? await APIClient.shared.quickAdd(title: title)
+            _ = try? await APIClient.shared.quickAdd(title: title, parse: parse)
             isBusy = false
             text = ""
             onClose()

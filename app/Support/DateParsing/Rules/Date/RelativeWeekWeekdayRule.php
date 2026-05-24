@@ -30,7 +30,7 @@ class RelativeWeekWeekdayRule extends Rule
         }
 
         // "over N weken vrijdag" → that weekday in the target week.
-        if ($this->find($text, '/\bover\s+('.$num.')\s+(?:weken|week|weekje)\s+(?:op\s+)?('.$wd.')\b/iu', $m)) {
+        if ($this->find($text, '/\b(?:over|binnen)\s+('.$num.')\s+(?:weken|week|weekje)\s+(?:op\s+)?('.$wd.')\b/iu', $m)) {
             return RuleMatch::date($m, Clock::weekOffsetWeekday($today, Lexicon::num($m[1][0]), Lexicon::weekday($m[2][0])));
         }
 

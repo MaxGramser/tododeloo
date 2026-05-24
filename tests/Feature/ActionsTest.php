@@ -166,6 +166,28 @@ it('QuickAddTodo on a Saturday targets the upcoming Monday', function () {
     CarbonImmutable::setTestNow();
 });
 
+it('QuickAddTodo applies a parsed priority hint', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 10, 0));
+
+    $result = app(QuickAddTodo::class)($this->user, 'urgent de cv-ketel laten checken');
+
+    expect($result['todo']->priority)->toBe(Priority::High)
+        ->and($result['todo']->title)->toBe('de cv-ketel laten checken');
+
+    CarbonImmutable::setTestNow();
+});
+
+it('QuickAddTodo raw mode skips parsing and keeps the literal title', function () {
+    CarbonImmutable::setTestNow(CarbonImmutable::create(2026, 5, 20, 10, 0));
+
+    $result = app(QuickAddTodo::class)($this->user, 'kijken of nick 2 juli mee kan', null, parse: false);
+
+    expect($result['todo']->title)->toBe('kijken of nick 2 juli mee kan')
+        ->and($result['target_date']->toDateString())->toBe('2026-05-20');
+
+    CarbonImmutable::setTestNow();
+});
+
 it('CarryOverTodos only attaches active todos', function () {
     $active = app(CreateTodo::class)($this->user, ['title' => 'open']);
     $done = app(CreateTodo::class)($this->user, ['title' => 'gedaan']);

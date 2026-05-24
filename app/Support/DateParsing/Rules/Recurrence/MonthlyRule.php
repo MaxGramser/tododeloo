@@ -22,6 +22,9 @@ class MonthlyRule extends Rule
         if ($this->find($text, '/\b'.Lexicon::EVERY.'\s+half\s+jaar\b/iu', $m) || $this->find($text, '/\bhalfjaarlijks\b/iu', $m)) {
             return RuleMatch::recurrence($m, 'FREQ=MONTHLY;INTERVAL=6', $today);
         }
+        if ($this->find($text, '/\bom\s+de\s+andere\s+maand\b/iu', $m)) {
+            return RuleMatch::recurrence($m, 'FREQ=MONTHLY;INTERVAL=2', $today);
+        }
         if ($this->find($text, '/\b(?:'.Lexicon::EVERY.'|om de)\s+('.$num.')\s+maanden\b/iu', $m)) {
             return RuleMatch::recurrence($m, Rrule::monthly(Lexicon::num($m[1][0])), $today);
         }

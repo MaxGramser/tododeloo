@@ -14,13 +14,14 @@ class QuickAddController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'list_id' => ['nullable', 'integer'],
+            'parse' => ['nullable', 'boolean'],
         ]);
 
         $contextList = isset($validated['list_id'])
             ? $request->user()->lists()->find($validated['list_id'])
             : null;
 
-        $result = $quickAdd($request->user(), $validated['title'], $contextList);
+        $result = $quickAdd($request->user(), $validated['title'], $contextList, $validated['parse'] ?? true);
 
         Inertia::flash('toast', [
             'type' => 'success',

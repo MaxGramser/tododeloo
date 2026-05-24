@@ -22,7 +22,7 @@ class WeeklyRule extends Rule
         if ($this->find($text, '/\b(?:'.Lexicon::EVERY.'|om de)\s+('.$num.')\s+weken\b/iu', $m)) {
             return RuleMatch::recurrence($m, Rrule::weekly(Lexicon::num($m[1][0])), Clock::upcomingWeekday($today, 1));
         }
-        if ($this->find($text, '/\bom\s+de\s+week\b/iu', $m) || $this->find($text, '/\btweewekelijks\b/iu', $m)) {
+        if ($this->find($text, '/\bom\s+de\s+(?:andere\s+)?week\b/iu', $m) || $this->find($text, '/\btweewekelijks\b/iu', $m)) {
             return RuleMatch::recurrence($m, 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', Clock::upcomingWeekday($today, 1));
         }
         if ($this->find($text, '/\b'.Lexicon::EVERY.'\s+week\b/iu', $m) || $this->find($text, '/\bwekelijks\b/iu', $m) || $this->find($text, '/\bper\s+week\b/iu', $m)) {

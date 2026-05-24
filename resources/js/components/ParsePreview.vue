@@ -6,11 +6,11 @@ import {
 } from '@/composables/useParsePreview';
 
 const props = withDefaults(
-    defineProps<{ title: string; variant?: 'strip' | 'panel' }>(),
-    { variant: 'strip' },
+    defineProps<{ title: string; variant?: 'strip' | 'panel'; parse?: boolean }>(),
+    { variant: 'strip', parse: true },
 );
 
-const { preview } = useParsePreview(toRef(props, 'title'));
+const { preview } = useParsePreview(toRef(props, 'title'), toRef(props, 'parse'));
 
 const containerClass = computed(() =>
     props.variant === 'panel'
@@ -48,7 +48,7 @@ const resolvedLabel = computed(() => {
 <template>
     <Transition name="parse-fade">
         <div v-if="preview" :class="containerClass">
-            <span class="font-mono text-[10px] tracking-widest text-muted-foreground/60 uppercase">leest als</span>
+            <span class="font-mono text-[10px] tracking-widest text-muted-foreground/60 uppercase">{{ props.parse ? 'leest als' : 'letterlijk' }}</span>
             <span class="text-sm whitespace-pre-wrap">
                 <span
                     v-for="(seg, i) in preview.segments"

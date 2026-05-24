@@ -35,34 +35,41 @@ class QuickAddTodo
      * The returned `feedback` is the single source of truth for the confirmation
      * shown on every client (web/iOS/Mac toast, Siri).
      *
+     * Pass `$parse = false` for "raw mode": the line is taken literally as the
+     * title, with no date/recurrence/priority parsing (the quick-add toggle).
+     *
      * @return array{todo: Todo, target_date: ?CarbonImmutable, feedback: array{message: string, description: string}}
      */
-    public function __invoke(User $user, string $title, ?TodoList $contextList = null): array
+    public function __invoke(User $user, string $title, ?TodoList $contextList = null, bool $parse = true): array
     {
-        return DB::transaction(function () use ($user, $title, $contextList) {
-            $parsed = $this->parser->parse($title);
-            $cleanTitle = $parsed['title'];
+        return DB::transaction(function () use ($user, $title, $contextList, $parse) {
+            $parsed = $this->parser->parse($title, null, $parse);
+
+            $attributes = ['title' => $parsed['title']];
+            if ($parsed['priority'] !== null) {
+                $attributes['priority'] = $parsed['priority'];
+            }
 
             if ($parsed['recurrence'] !== null) {
                 $anchor = $parsed['recurrence']['anchor'];
                 $dailyList = ($this->getOrCreateDailyList)($user, $anchor);
-                $todo = ($this->createTodo)($user, ['title' => $cleanTitle], $dailyList);
+                $todo = ($this->createTodo)($user, $attributes, $dailyList);
                 ($this->createRecurrence)($todo, $parsed['recurrence']['rrule'], $anchor);
                 $todo = $todo->fresh();
                 $targetDate = $anchor;
             } elseif ($parsed['date'] !== null) {
                 $dailyList = ($this->getOrCreateDailyList)($user, $parsed['date']);
-                $todo = ($this->createTodo)($user, ['title' => $cleanTitle], $dailyList);
+                $todo = ($this->createTodo)($user, $attributes, $dailyList);
                 $targetDate = $parsed['date'];
             } elseif ($contextList !== null) {
                 // No explicit date: follow the current page.
-                $todo = ($this->createTodo)($user, ['title' => $cleanTitle], $contextList);
+                $todo = ($this->createTodo)($user, $attributes, $contextList);
                 $targetDate = $this->contextDate($contextList);
             } else {
                 // No context either: fall back to the workday rule.
                 $targetDate = Workday::quickAddTargetDate();
                 $dailyList = ($this->getOrCreateDailyList)($user, $targetDate);
-                $todo = ($this->createTodo)($user, ['title' => $cleanTitle], $dailyList);
+                $todo = ($this->createTodo)($user, $attributes, $dailyList);
             }
 
             return [

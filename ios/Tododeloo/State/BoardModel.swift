@@ -51,6 +51,8 @@ final class BoardModel {
     var hasLoaded = false
     var errorMessage: String?
     var quickAddText = ""
+    /// Raw-mode toggle for the quick-add field: false = store the line literally.
+    var quickAddParse = true
 
     private let api = APIClient.shared
     var onUnauthorized: (() -> Void)?
@@ -207,7 +209,9 @@ final class BoardModel {
     func submitQuickAdd() async {
         let title = quickAddText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return }
+        let parse = quickAddParse
         quickAddText = ""
+        quickAddParse = true
 
         // Show it instantly; the reload below reconciles with the server's row.
         let draft = Todo.draft(title: title)
@@ -215,10 +219,10 @@ final class BoardModel {
 
         do {
             // Always go through quick-add so the Dutch date/recurrence parsing
-            // runs. Passing the current list makes a date-less todo land on the
-            // page you're on (today / master / this custom list); an explicit
-            // date or recurrence in the text still wins.
-            let response = try await api.quickAdd(title: title, listId: listId)
+            // runs (unless raw mode is off). Passing the current list makes a
+            // date-less todo land on the page you're on (today / master / this
+            // custom list); an explicit date or recurrence in the text still wins.
+            let response = try await api.quickAdd(title: title, listId: listId, parse: parse)
             await load()
             if let feedback = response.feedback {
                 ToastCenter.shared.show(feedback.message, detail: feedback.description)

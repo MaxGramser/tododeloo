@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import ParseModeToggle from '@/components/ParseModeToggle.vue';
 import ParsePreview from '@/components/ParsePreview.vue';
 import { useQuickAddTarget } from '@/composables/useQuickAddTarget';
 
 const title = ref('');
+const parseEnabled = ref(true);
 const submitting = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 const { target } = useQuickAddTarget();
@@ -18,12 +20,17 @@ function submit() {
     submitting.value = true;
     router.post(
         '/quick-add',
-        { title: title.value.trim(), list_id: target.value.listId },
+        {
+            title: title.value.trim(),
+            list_id: target.value.listId,
+            parse: parseEnabled.value,
+        },
         {
             preserveScroll: true,
             preserveState: true,
             onFinish: () => {
                 title.value = '';
+                parseEnabled.value = true;
                 submitting.value = false;
                 inputRef.value?.focus();
             },
@@ -52,13 +59,14 @@ function submit() {
                     :placeholder="`Snel toevoegen (⌘K)`"
                     class="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
+                <ParseModeToggle v-model="parseEnabled" />
                 <span
                     class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
                 >
                     → {{ target.label }}
                 </span>
             </div>
-            <ParsePreview :title="title" variant="panel" />
+            <ParsePreview :title="title" :parse="parseEnabled" variant="panel" />
         </div>
     </form>
 </template>

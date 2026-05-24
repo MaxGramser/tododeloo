@@ -17,6 +17,6 @@ class QuickAddPreviewController extends Controller
      */
     public function __invoke(Request $request, DutchDateParser $parser): array
     {
-        return $parser->annotate((string) $request->query('title', ''));
+        return $parser->annotate((string) $request->query('title', ''), null, $request->boolean('parse', true));
     }
 }

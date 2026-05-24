@@ -207,6 +207,9 @@ struct ParsePreviewStrip: View {
 
     let text: String
     var style: Style = .plain
+    /// When false (raw mode) the backend returns the whole line as one plain
+    /// title segment, so the strip mirrors what will actually be saved.
+    var parse: Bool = true
     @State private var preview: ParsePreview?
 
     var body: some View {
@@ -222,7 +225,7 @@ struct ParsePreviewStrip: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: preview)
-        .task(id: text) { await refresh() }
+        .task(id: "\(parse)\u{1}\(text)") { await refresh() }
     }
 
     private func refresh() async {
@@ -234,7 +237,7 @@ struct ParsePreviewStrip: View {
         // Debounce: this task is cancelled and restarted on every keystroke.
         try? await Task.sleep(for: .milliseconds(220))
         guard !Task.isCancelled else { return }
-        let result = try? await APIClient.shared.parsePreview(trimmed)
+        let result = try? await APIClient.shared.parsePreview(trimmed, parse: parse)
         if !Task.isCancelled {
             preview = result
         }
@@ -259,7 +262,7 @@ struct ParsePreviewStrip: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 if showsEyebrow {
-                    MonoLabel("leest als", color: Theme.faint)
+                    MonoLabel(parse ? "leest als" : "letterlijk", color: Theme.faint)
                 }
                 Text(attributed(preview.segments))
                     .font(.system(size: 13))
@@ -316,6 +319,24 @@ struct ParsePreviewStrip: View {
             return "\(recurrence.summary) · vanaf \(recurrence.anchorLabel)"
         }
         return nil
+    }
+}
+
+/// A tiny mono toggle for the quick-add field: "auto" (date/recurrence parsing
+/// on) vs "letterlijk" (raw — store the line as typed). Matches the web toggle.
+struct ParseModeToggle: View {
+    @Binding var parsing: Bool
+
+    var body: some View {
+        Button {
+            parsing.toggle()
+        } label: {
+            MonoLabel(parsing ? "auto" : "letterlijk", color: parsing ? Theme.faint : Theme.accent)
+        }
+        .buttonStyle(.plain)
+        .help(parsing
+            ? "Datum en herhaling worden herkend — tik om letterlijk op te slaan"
+            : "Wordt letterlijk opgeslagen — tik om herkenning aan te zetten")
     }
 }
 

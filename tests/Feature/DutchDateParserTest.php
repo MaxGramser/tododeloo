@@ -30,6 +30,27 @@ it('parses a one-off date and keeps the cleaned title', function (string $input,
     'over 3 weken' => ['over 3 weken vakantie plannen', '2026-06-10', 'vakantie plannen'],
     'over N weken + weekday' => ['over 2 weken vrijdag een etentje organiseren', '2026-06-05', 'een etentje organiseren'],
     'over N weken op weekday' => ['over een week op maandag de auto wassen', '2026-05-25', 'de auto wassen'],
+    'morgenochtend compound' => ['morgenochtend tandarts', '2026-05-21', 'tandarts'],
+    'morgenavond compound' => ['morgenavond koken voor gasten', '2026-05-21', 'koken voor gasten'],
+    'binnen N dagen' => ['binnen 3 dagen betalen', '2026-05-23', 'betalen'],
+    'begin van een maand' => ['begin juni vakantie boeken', '2026-06-01', 'vakantie boeken'],
+    'half van een maand' => ['half juli zwemmen', '2026-07-15', 'zwemmen'],
+    'eind van een maand' => ['eind augustus terras opruimen', '2026-08-31', 'terras opruimen'],
+    'eind van de maand' => ['eind van de maand rapport sturen', '2026-05-31', 'rapport sturen'],
+    'deze maand' => ['deze maand belasting doen', '2026-05-31', 'belasting doen'],
+    'eind van het jaar' => ['eind van het jaar evalueren', '2026-12-31', 'evalueren'],
+    'volgend weekend' => ['volgend weekend klussen', '2026-05-30', 'klussen'],
+    'na het weekend' => ['na het weekend frank bellen', '2026-05-25', 'frank bellen'],
+    'na een weekday' => ['na vrijdag de schuur opruimen', '2026-05-23', 'de schuur opruimen'],
+    'bare de Ne this month' => ['de 25e huur betalen', '2026-05-25', 'huur betalen'],
+    'bare de Ne next month' => ['de 15e factuur sturen', '2026-06-15', 'factuur sturen'],
+    'ISO date' => ['vergadering 2026-06-05', '2026-06-05', 'vergadering'],
+    'uiterlijk weekday' => ['uiterlijk maandag offerte sturen', '2026-05-25', 'offerte sturen'],
+    'deadline weekday' => ['deadline vrijdag rapport inleveren', '2026-05-22', 'rapport inleveren'],
+    'feestdag sinterklaas' => ['sinterklaas cadeaus kopen', '2026-12-05', 'cadeaus kopen'],
+    'feestdag kerst' => ['kerst diner plannen', '2026-12-25', 'diner plannen'],
+    'feestdag met pasen (rolt door)' => ['met pasen familie bezoeken', '2027-03-28', 'familie bezoeken'],
+    'feestdag koningsdag (rolt door)' => ['koningsdag vrij nemen', '2027-04-27', 'vrij nemen'],
     'spelled-out date' => ['op 25 december kerstcadeaus kopen', '2026-12-25', 'kerstcadeaus kopen'],
     'numeric date' => ['25-12 oliebollen', '2026-12-25', 'oliebollen'],
     'vandaag keeps ff' => ['vandaag ff de planten water geven', '2026-05-20', 'ff de planten water geven'],
@@ -77,6 +98,24 @@ it('parses recurrence phrases into an rrule + anchor and a cleaned title', funct
     // Workday / daily with excluded weekdays.
     'werkdag behalve maandag' => ['iedere werkdag behalve maandag de planten water geven', 'FREQ=WEEKLY;BYDAY=TU,WE,TH,FR', '2026-05-20', 'de planten water geven'],
     'elke dag behalve zondag' => ['elke dag behalve zondag pillen innemen', 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA', '2026-05-20', 'pillen innemen'],
+    // Multiple weekdays → BYDAY list.
+    'elke ma en wo' => ['elke maandag en woensdag sporten', 'FREQ=WEEKLY;BYDAY=MO,WE', '2026-05-20', 'sporten'],
+    // Day-of-month → BYMONTHDAY (−1 = last day).
+    'elke 1e van de maand' => ['elke 1e van de maand huur betalen', 'FREQ=MONTHLY;BYMONTHDAY=1', '2026-06-01', 'huur betalen'],
+    'maandelijks op de 15e' => ['maandelijks op de 15e rapport sturen', 'FREQ=MONTHLY;BYMONTHDAY=15', '2026-06-15', 'rapport sturen'],
+    'elke laatste van de maand' => ['elke laatste van de maand boekhouding afsluiten', 'FREQ=MONTHLY;BYMONTHDAY=-1', '2026-05-31', 'boekhouding afsluiten'],
+    // Yearly pinned to a date.
+    'jaarlijks op datum' => ['elk jaar op 25 december cadeaus inpakken', 'FREQ=YEARLY', '2026-12-25', 'cadeaus inpakken'],
+    // Every-other / morning / count-per-unit.
+    'om de andere dag' => ['om de andere dag pillen innemen', 'FREQ=DAILY;INTERVAL=2', '2026-05-20', 'pillen innemen'],
+    'om de andere week' => ['om de andere week de planten water geven', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO', '2026-05-25', 'de planten water geven'],
+    'elke ochtend' => ['elke ochtend mediteren', 'FREQ=DAILY', '2026-05-20', 'mediteren'],
+    'N keer per week' => ['2 keer per week hardlopen', 'FREQ=WEEKLY;BYDAY=MO', '2026-05-25', 'hardlopen'],
+    'N keer per dag' => ['3x per dag pillen innemen', 'FREQ=DAILY', '2026-05-20', 'pillen innemen'],
+    // Last/first workday of the month → BYSETPOS.
+    'laatste werkdag van de maand' => ['elke laatste werkdag van de maand rapporteren', 'FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1', '2026-05-29', 'rapporteren'],
+    // Explicit start anchor for a recurrence.
+    'vanaf anchor' => ['elke dag vanaf maandag mediteren', 'FREQ=DAILY', '2026-05-25', 'mediteren'],
 ]);
 
 it('describes the nth-weekday recurrence in Dutch', function () {
@@ -101,6 +140,37 @@ it('produces rrules that match the recurrence presets', function () {
 
     $tuesday = parseNL('elke dinsdag x')['recurrence'];
     expect($presets->describe($tuesday['rrule'], $tuesday['anchor'])['preset'])->toBe('weekly');
+});
+
+it('detects a priority hint and strips it from the title', function (string $input, ?string $priority, string $title) {
+    $result = parseNL($input);
+
+    expect($result['priority']?->value)->toBe($priority)
+        ->and($result['title'])->toBe($title);
+})->with([
+    'belangrijk' => ['belangrijk rapport afmaken', 'high', 'rapport afmaken'],
+    'urgent + datum' => ['urgent klant bellen morgen', 'high', 'klant bellen'],
+    'uitroeptekens' => ['rapport afmaken!!!', 'high', 'rapport afmaken'],
+    'ooit → laag' => ['ooit de garage opruimen', 'low', 'de garage opruimen'],
+    'geen hint' => ['boodschappen doen', null, 'boodschappen doen'],
+]);
+
+it('raw mode takes the whole line literally', function () {
+    $result = (new DutchDateParser)->parse('kijken of nick 2 juli mee kan', CarbonImmutable::parse('2026-05-20'), parse: false);
+
+    expect($result['title'])->toBe('kijken of nick 2 juli mee kan')
+        ->and($result['date'])->toBeNull()
+        ->and($result['recurrence'])->toBeNull()
+        ->and($result['priority'])->toBeNull();
+});
+
+it('raw mode annotation is a single plain title segment', function () {
+    $result = app(DutchDateParser::class)->annotate('kijken of nick 2 juli mee kan', CarbonImmutable::parse('2026-05-20'), parse: false);
+
+    expect($result['date'])->toBeNull()
+        ->and($result['recurrence'])->toBeNull()
+        ->and(collect($result['segments'])->pluck('type')->unique()->values()->all())->toBe(['title'])
+        ->and(collect($result['segments'])->pluck('text')->implode(''))->toBe('kijken of nick 2 juli mee kan');
 });
 
 function annotateNL(string $input): array
@@ -136,6 +206,18 @@ it('marks an undated task entirely as title', function () {
     expect($segments->pluck('type')->unique()->values()->all())->toBe(['title'])
         ->and($segments->pluck('text')->implode(''))->toBe('boodschappen doen');
 });
+
+it('describes the new recurrence shapes in Dutch without crashing', function (string $input, string $contains) {
+    $result = annotateNL($input);
+
+    expect($result['recurrence'])->not->toBeNull()
+        ->and($result['recurrence']['summary'])->toContain($contains);
+})->with([
+    'meerdere weekdagen' => ['elke maandag en woensdag sporten', 'maandag en woensdag'],
+    'dag van de maand' => ['maandelijks op de 15e rapport', '15e'],
+    'laatste werkdag' => ['elke laatste werkdag van de maand afsluiten', 'laatste werkdag'],
+    'laatste dag' => ['elke laatste van de maand boekhouding', 'laatste dag'],
+]);
 
 it('annotates a recurrence phrase with its summary', function () {
     $result = annotateNL('elke werkdag stand-up');

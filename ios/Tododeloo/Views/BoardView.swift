@@ -165,13 +165,14 @@ struct BoardView: View {
                             quickAddFocused = true
                         }
                     }
+                ParseModeToggle(parsing: $model.quickAddParse)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
 
             // The preview is the bottom half of the same card — it grows out of
             // the field when you type something parseable.
-            ParsePreviewStrip(text: model.quickAddText, style: .attached)
+            ParsePreviewStrip(text: model.quickAddText, style: .attached, parse: model.quickAddParse)
         }
         .background(Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

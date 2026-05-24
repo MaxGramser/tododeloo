@@ -52,11 +52,12 @@ struct MacMenuBarContent: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium))
                     .onSubmit { Task { await model.submitQuickAdd() } }
+                ParseModeToggle(parsing: $model.quickAddParse)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
 
-            ParsePreviewStrip(text: model.quickAddText, style: .attached)
+            ParsePreviewStrip(text: model.quickAddText, style: .attached, parse: model.quickAddParse)
         }
         .background(Theme.surface)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

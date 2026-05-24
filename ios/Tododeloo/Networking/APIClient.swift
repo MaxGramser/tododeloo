@@ -218,16 +218,20 @@ final class APIClient {
     }
 
     /// Live parse preview of a quick-add line — the highlightable segments.
-    func parsePreview(_ title: String) async throws -> ParsePreview {
+    /// Pass `parse: false` for raw mode (the whole line as one plain title).
+    func parsePreview(_ title: String, parse: Bool = true) async throws -> ParsePreview {
         var allowed = CharacterSet.urlQueryAllowed
         allowed.remove(charactersIn: "&=?+")
         let encoded = title.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-        return try await send(.get, "quick-add/preview?title=\(encoded)")
+        let raw = parse ? "" : "&parse=0"
+        return try await send(.get, "quick-add/preview?title=\(encoded)\(raw)")
     }
 
+    /// Pass `parse: false` for raw mode: the line is stored literally, with no
+    /// date/recurrence/priority parsing.
     @discardableResult
-    func quickAdd(title: String, listId: Int? = nil) async throws -> QuickAddResponse {
-        var body: [String: Any] = ["title": title]
+    func quickAdd(title: String, listId: Int? = nil, parse: Bool = true) async throws -> QuickAddResponse {
+        var body: [String: Any] = ["title": title, "parse": parse]
         if let listId { body["list_id"] = listId }
         return try await send(.post, "quick-add", body: body)
     }
