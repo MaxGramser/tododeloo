@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\DutchDateParser;
+use App\Support\DateParsing\DutchDateParser;
 use App\Support\RecurrencePresets;
 use Carbon\CarbonImmutable;
 
@@ -28,6 +28,8 @@ it('parses a one-off date and keeps the cleaned title', function (string $input,
     'op weekday already past' => ['bel frank op dinsdag', '2026-05-26', 'bel frank'],
     'deze week weekday' => ['deze week donderdag verslag', '2026-05-21', 'verslag'],
     'over 3 weken' => ['over 3 weken vakantie plannen', '2026-06-10', 'vakantie plannen'],
+    'over N weken + weekday' => ['over 2 weken vrijdag een etentje organiseren', '2026-06-05', 'een etentje organiseren'],
+    'over N weken op weekday' => ['over een week op maandag de auto wassen', '2026-05-25', 'de auto wassen'],
     'spelled-out date' => ['op 25 december kerstcadeaus kopen', '2026-12-25', 'kerstcadeaus kopen'],
     'numeric date' => ['25-12 oliebollen', '2026-12-25', 'oliebollen'],
     'vandaag keeps ff' => ['vandaag ff de planten water geven', '2026-05-20', 'ff de planten water geven'],

@@ -6,6 +6,7 @@ use App\Actions\Lists\GetOrCreateDailyList;
 use App\Actions\Lists\ReorderListItems;
 use App\Actions\Lists\UpdateListSortMode;
 use App\Actions\Todos\AddTodoToList;
+use App\Actions\Todos\BuildRitualCandidates;
 use App\Actions\Todos\CarryOverTodos;
 use App\Actions\Todos\CompleteTodo;
 use App\Actions\Todos\CreateTodo;
@@ -174,6 +175,28 @@ it('CarryOverTodos only attaches active todos', function () {
 
     expect($list->todos)->toHaveCount(1)
         ->and($list->todos->first()->id)->toBe($active->id);
+});
+
+it('keeps a completed future-scheduled todo out of the morning ritual', function () {
+    $today = CarbonImmutable::create(2026, 5, 20);
+    $tuesday = app(GetOrCreateDailyList::class)($this->user, CarbonImmutable::create(2026, 5, 26));
+
+    // Two todos scheduled for next Tuesday; one is ticked off ahead of its date.
+    $done = app(CreateTodo::class)($this->user, ['title' => 'bunq rekeningen checken'], $tuesday);
+    app(CompleteTodo::class)($done);
+    $open = app(CreateTodo::class)($this->user, ['title' => 'abonnementen opzeggen'], $tuesday);
+
+    $todayList = app(GetOrCreateDailyList::class)($this->user, $today);
+    $buckets = app(BuildRitualCandidates::class)($this->user, $today, $todayList);
+
+    $ids = collect($buckets['preScheduled'])
+        ->concat($buckets['carryOverCandidates'])
+        ->concat($buckets['earlierCandidates'])
+        ->concat($buckets['masterOpenTodos'])
+        ->pluck('id');
+
+    expect($ids)->not->toContain($done->id) // completed → never surfaces
+        ->and($ids)->toContain($open->id);  // still-open control → does surface
 });
 
 it('ReorderListItems updates positions in given order', function () {

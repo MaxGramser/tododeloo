@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\DutchDateParser;
+use App\Support\DateParsing\DutchDateParser;
 use Illuminate\Http\Request;
 
 /**

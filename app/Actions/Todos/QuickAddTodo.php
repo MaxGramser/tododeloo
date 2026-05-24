@@ -7,7 +7,7 @@ use App\Actions\Recurrences\CreateRecurrence;
 use App\Models\Todo;
 use App\Models\TodoList;
 use App\Models\User;
-use App\Support\DutchDateParser;
+use App\Support\DateParsing\DutchDateParser;
 use App\Support\QuickAddFeedback;
 use App\Support\Workday;
 use Carbon\CarbonImmutable;

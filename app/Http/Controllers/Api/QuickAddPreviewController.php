@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Support\DutchDateParser;
+use App\Support\DateParsing\DutchDateParser;
 use Illuminate\Http\Request;
 
 /**
