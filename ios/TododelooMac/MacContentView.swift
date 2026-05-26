@@ -1,3 +1,5 @@
+import AppKit
+import Combine
 import SwiftUI
 
 /// Which collection the middle column shows. Maps onto the shared BoardContext.
@@ -65,9 +67,25 @@ struct MacContentView: View {
             lists.onUnauthorized = { session.handleUnauthorized() }
             upcoming.onUnauthorized = { session.handleUnauthorized() }
             board.onUnauthorized = { session.handleUnauthorized() }
+            // Keep the agenda in step with the initial board, like the boards
+            // swapped in below — so a board reload also refreshes "Binnenkort".
+            board.onDidLoad = { Task { await upcoming.load() } }
             await lists.load()
-            await upcoming.load()
             await board.load()
+        }
+        // Re-fetch when the app returns to the front (after blur, hide or
+        // minimize): the iOS app or web may have changed things while we were
+        // away. The debounce collapses the activate + deminiaturize pair that
+        // restoring a minimized window fires into a single reload.
+        .onReceive(
+            Publishers.Merge(
+                NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification),
+                NotificationCenter.default.publisher(for: NSWindow.didDeminiaturizeNotification)
+            )
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+        ) { _ in
+            guard board.hasLoaded else { return }
+            Task { await refresh() }
         }
         .onChange(of: selection) { _, newValue in
             guard let newValue else { return }
@@ -88,6 +106,14 @@ struct MacContentView: View {
                 }
             }
         }
+    }
+
+    /// Reload everything the window shows. The board's `onDidLoad` carries the
+    /// "Binnenkort" agenda along with it, so the lists and the board cover all
+    /// three models.
+    private func refresh() async {
+        await lists.load()
+        await board.load()
     }
 
     /// Rebuilt on every render so the menu reflects the current board. Closures

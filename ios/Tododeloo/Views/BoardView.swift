@@ -4,6 +4,7 @@ import SwiftUI
 /// quick-add field, and the todo rows with their context menus and sheets.
 struct BoardView: View {
     @Environment(Session.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
     @Bindable var model: BoardModel
     var showsHeader = true
 
@@ -54,6 +55,13 @@ struct BoardView: View {
             model.onUnauthorized = { session.handleUnauthorized() }
             if !model.hasLoaded {
                 await model.load()
+            }
+        }
+        // Coming back from the background: the iOS widget, web, or Mac app may
+        // have changed things while we were away, so re-fetch the board.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active, model.hasLoaded {
+                Task { await model.load() }
             }
         }
         .task(id: model.recentlyDeleted?.id) {

@@ -10,8 +10,9 @@ use Carbon\CarbonImmutable;
 
 /**
  * A monthly recurrence on a day-of-month: "elke 1e van de maand", "maandelijks
- * op de 15e", "elke laatste van de maand" → FREQ=MONTHLY;BYMONTHDAY=N (−1 for
- * the last day). Distinct from the nth-weekday rule, which names a weekday.
+ * op de 15e", "elke maand op de 25e (van de maand)", "elke laatste van de maand"
+ * → FREQ=MONTHLY;BYMONTHDAY=N (−1 for the last day). Distinct from the
+ * nth-weekday rule, which names a weekday.
  */
 class MonthDayRecurrenceRule extends Rule
 {
@@ -20,6 +21,7 @@ class MonthDayRecurrenceRule extends Rule
         $day = '(\d{1,2}|eerste|laatste)(?:e|ste|de)?';
 
         if ($this->find($text, '/\b'.Lexicon::EVERY.'\s+'.$day.'\s+van\s+(?:de\s+)?maand\b/iu', $m)
+            || $this->find($text, '/\b'.Lexicon::EVERY.'\s+maand\s+op\s+de\s+'.$day.'(?:\s+van\s+(?:de\s+)?maand)?\b/iu', $m)
             || $this->find($text, '/\bmaandelijks\s+op\s+de\s+'.$day.'\b/iu', $m)) {
             $token = mb_strtolower($m[1][0]);
 

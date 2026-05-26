@@ -14,6 +14,7 @@ private enum ListsSheet: Identifiable {
 
 struct ListsView: View {
     @Environment(Session.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model = ListsModel()
     @State private var sheet: ListsSheet?
 
@@ -89,6 +90,12 @@ struct ListsView: View {
             model.onUnauthorized = { session.handleUnauthorized() }
             if !model.hasLoaded {
                 await model.load()
+            }
+        }
+        // Refresh the list overview when the app returns from the background.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active, model.hasLoaded {
+                Task { await model.load() }
             }
         }
     }

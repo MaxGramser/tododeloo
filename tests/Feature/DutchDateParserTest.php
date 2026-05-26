@@ -103,6 +103,7 @@ it('parses recurrence phrases into an rrule + anchor and a cleaned title', funct
     // Day-of-month → BYMONTHDAY (−1 = last day).
     'elke 1e van de maand' => ['elke 1e van de maand huur betalen', 'FREQ=MONTHLY;BYMONTHDAY=1', '2026-06-01', 'huur betalen'],
     'maandelijks op de 15e' => ['maandelijks op de 15e rapport sturen', 'FREQ=MONTHLY;BYMONTHDAY=15', '2026-06-15', 'rapport sturen'],
+    'elke maand op de 25e van de maand' => ['herinner me iedere maand op de 25e van de maand aan Salaris overmaken', 'FREQ=MONTHLY;BYMONTHDAY=25', '2026-05-25', 'Salaris overmaken'],
     'elke laatste van de maand' => ['elke laatste van de maand boekhouding afsluiten', 'FREQ=MONTHLY;BYMONTHDAY=-1', '2026-05-31', 'boekhouding afsluiten'],
     // Yearly pinned to a date.
     'jaarlijks op datum' => ['elk jaar op 25 december cadeaus inpakken', 'FREQ=YEARLY', '2026-12-25', 'cadeaus inpakken'],

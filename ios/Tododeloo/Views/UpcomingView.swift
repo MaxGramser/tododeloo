@@ -6,6 +6,7 @@ import SwiftUI
 /// complete, delete) without leaving the agenda.
 struct UpcomingView: View {
     @Environment(Session.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model = UpcomingModel()
     @State private var detail: Todo?
     @State private var moveTarget: Todo?
@@ -29,6 +30,12 @@ struct UpcomingView: View {
             model.onUnauthorized = { session.handleUnauthorized() }
             if !model.hasLoaded {
                 await model.load()
+            }
+        }
+        // Refresh the agenda when the app returns from the background.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active, model.hasLoaded {
+                Task { await model.load() }
             }
         }
         .sheet(item: $detail) { todo in
