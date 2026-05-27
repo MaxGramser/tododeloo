@@ -48,6 +48,7 @@ export type Todo = {
     created_at: string;
     recurrence_id: number | null;
     recurrence?: Recurrence | null;
+    missed_count?: number;
     tags: Tag[];
     position?: number;
     list_memberships?: ListMembership[];

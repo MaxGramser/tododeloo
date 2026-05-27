@@ -40,6 +40,8 @@ class DailyListController extends Controller
             'carry_over_ids.*' => 'integer',
             'new_titles' => 'array',
             'new_titles.*' => 'string|max:255',
+            'missed_recurring_ids' => 'array',
+            'missed_recurring_ids.*' => 'integer',
         ]);
 
         $startDay(
@@ -47,6 +49,7 @@ class DailyListController extends Controller
             CarbonImmutable::parse($date),
             $validated['carry_over_ids'] ?? [],
             $validated['new_titles'] ?? [],
+            $validated['missed_recurring_ids'] ?? [],
         );
 
         return back();
@@ -99,6 +102,7 @@ class DailyListController extends Controller
             'previousWorkday' => $previousWorkday->toDateString(),
             'carryOverCandidates' => TodoResource::collection($ritual['carryOverCandidates'] ?? collect())->resolve(),
             'earlierCandidates' => TodoResource::collection($ritual['earlierCandidates'] ?? collect())->resolve(),
+            'missedRecurring' => TodoResource::collection($ritual['missedRecurring'] ?? collect())->resolve(),
             'masterOpenTodos' => TodoResource::collection($ritual['masterOpenTodos'] ?? collect())->resolve(),
             'preScheduled' => TodoResource::collection($ritual['preScheduled'] ?? collect())->resolve(),
         ]);

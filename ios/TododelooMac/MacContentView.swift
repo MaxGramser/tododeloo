@@ -204,6 +204,7 @@ struct MacRitualView: View {
 
     @State private var selectedCarry: Set<Int> = []
     @State private var selectedEarlier: Set<Int> = []
+    @State private var selectedMissed: Set<Int> = []
     @State private var selectedMaster: Set<Int> = []
     @State private var newTitles: [String] = []
     @State private var draft = ""
@@ -234,6 +235,10 @@ struct MacRitualView: View {
                         todos: model.earlierCandidates,
                         selection: $selectedEarlier
                     )
+                }
+
+                if !model.missedRecurring.isEmpty {
+                    missedRecurringSection
                 }
 
                 selectableSection(
@@ -342,6 +347,36 @@ struct MacRitualView: View {
         .padding(.top, 30)
     }
 
+    /// Missed recurrences, collapsed to one row each with an outstanding count.
+    /// Checking a row catches up all its days onto today.
+    private var missedRecurringSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            sectionHeader(title: "herhaald, gemist", count: model.missedRecurring.count, trailing: "inhalen op vandaag", accent: false)
+            ForEach(model.missedRecurring) { todo in
+                Button {
+                    toggle(todo.id, in: $selectedMissed)
+                } label: {
+                    HStack(spacing: 12) {
+                        checkbox(selectedMissed.contains(todo.id))
+                        Text(todo.title)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                        if let count = todo.missedCount, count > 1 {
+                            Text("\(count)× gemist").font(.mono(10)).foregroundStyle(Theme.faint)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .overlay(alignment: .bottom) { divider.opacity(0.5) }
+            }
+        }
+        .padding(.top, 30)
+    }
+
     private var preScheduledSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             sectionHeader(title: "al gepland", count: model.preScheduled.count, trailing: nil, accent: true)
@@ -435,7 +470,7 @@ struct MacRitualView: View {
         isStarting = true
         let carryOverIds = Array(selectedCarry.union(selectedEarlier).union(selectedMaster))
         Task {
-            await model.startDay(carryOverIds: carryOverIds, newTitles: newTitles)
+            await model.startDay(carryOverIds: carryOverIds, newTitles: newTitles, missedRecurringIds: Array(selectedMissed))
             isStarting = false
         }
     }

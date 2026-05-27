@@ -205,6 +205,62 @@ it('surfaces a due recurrence as pre-scheduled when opening today', function () 
             ->has('preScheduled', 1));
 });
 
+it('collapses missed recurrence instances into their own bucket with a count', function () {
+    // Inactive so nothing materializes for today; we seed past misses by hand.
+    $recurrence = Recurrence::factory()->daily()->inactive()->for($this->user)->create(['title' => 'Ochtendgym']);
+
+    foreach ([1, 2, 3] as $daysAgo) {
+        $day = CarbonImmutable::today()->subDays($daysAgo);
+        $list = app(GetOrCreateDailyList::class)($this->user, $day);
+        $instance = Todo::factory()->for($this->user)->create([
+            'recurrence_id' => $recurrence->id,
+            'occurred_on' => $day,
+            'title' => 'Ochtendgym',
+        ]);
+        app(AddTodoToList::class)($instance, $list);
+    }
+
+    $this->get(route('today.show'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('needsRitual', true)
+            ->has('missedRecurring', 1)
+            ->where('missedRecurring.0.title', 'Ochtendgym')
+            ->where('missedRecurring.0.missed_count', 3)
+            ->has('carryOverCandidates', 0)
+            ->has('earlierCandidates', 0)
+            ->has('masterOpenTodos', 0));
+});
+
+it('catches up every missed instance onto today with dated titles when starting the day', function () {
+    $recurrence = Recurrence::factory()->daily()->inactive()->for($this->user)->create(['title' => 'Ochtendgym']);
+
+    $days = [CarbonImmutable::today()->subDay(), CarbonImmutable::today()->subDays(2)];
+    $representativeId = null;
+    foreach ($days as $day) {
+        $list = app(GetOrCreateDailyList::class)($this->user, $day);
+        $instance = Todo::factory()->for($this->user)->create([
+            'recurrence_id' => $recurrence->id,
+            'occurred_on' => $day,
+            'title' => 'Ochtendgym',
+        ]);
+        app(AddTodoToList::class)($instance, $list);
+        $representativeId ??= $instance->id; // most recent miss
+    }
+
+    $today = CarbonImmutable::today();
+    $this->post(route('day.start', $today->toDateString()), [
+        'missed_recurring_ids' => [$representativeId],
+    ])->assertRedirect();
+
+    $todayList = $this->user->lists()->where('type', ListType::Daily)->whereDate('date', $today)->first();
+    $titles = $todayList->todos()->pluck('title');
+
+    expect($titles)->toContain('Ochtendgym · '.$days[0]->locale('nl')->translatedFormat('d M'))
+        ->and($titles)->toContain('Ochtendgym · '.$days[1]->locale('nl')->translatedFormat('d M'))
+        ->and($todayList->todos()->whereNotNull('recurrence_id')->count())->toBe(2);
+});
+
 it('stops a recurrence so no further instances are generated', function () {
     $recurrence = Recurrence::factory()->daily()->for($this->user)->create([
         'dtstart' => CarbonImmutable::today()->subWeek(),

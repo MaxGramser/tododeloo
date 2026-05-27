@@ -28,6 +28,10 @@ class TodoResource extends JsonResource
             'completed_at' => $this->completed_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
             'recurrence_id' => $this->recurrence_id,
+            'missed_count' => $this->when(
+                array_key_exists('missed_count', $this->getAttributes()),
+                fn () => (int) $this->missed_count,
+            ),
             'scheduled_for' => $this->whenLoaded('lists', fn () => self::scheduledDate($this->lists)),
             'recurrence' => $this->whenLoaded('recurrence', function () {
                 if ($this->recurrence === null) {

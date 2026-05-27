@@ -62,6 +62,9 @@ struct Todo: Codable, Hashable, Identifiable {
     /// sits on), or nil when it isn't planned on any day. Tells the client when
     /// the todo becomes relevant.
     var scheduledFor: String?
+    /// In the morning ritual's "missed recurring" bucket: how many open past
+    /// occurrences this row stands in for. Nil outside that bucket.
+    var missedCount: Int?
 
     var isCompleted: Bool { completedAt != nil }
     var priorityValue: Priority { Priority(rawValue: priority) ?? .normal }
@@ -90,7 +93,8 @@ struct Todo: Codable, Hashable, Identifiable {
             subTodos: [],
             recurrenceId: nil,
             recurrence: nil,
-            scheduledFor: nil
+            scheduledFor: nil,
+            missedCount: nil
         )
     }
 
@@ -282,6 +286,9 @@ struct TodayResponse: Codable {
     let previousWorkday: String
     let carryOverCandidates: [Todo]
     let earlierCandidates: [Todo]
+    /// Optional so the app still decodes against a backend that predates this
+    /// field (e.g. production before deploy).
+    let missedRecurring: [Todo]?
     let masterOpenTodos: [Todo]
     let preScheduled: [Todo]
 }

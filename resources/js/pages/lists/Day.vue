@@ -14,12 +14,14 @@ const props = defineProps<{
     previousWorkday: string;
     carryOverCandidates: Todo[];
     earlierCandidates: Todo[];
+    missedRecurring: Todo[];
     masterOpenTodos: Todo[];
     preScheduled: Todo[];
 }>();
 
 const selectedCarry = ref<Set<number>>(new Set());
 const selectedEarlier = ref<Set<number>>(new Set());
+const selectedMissed = ref<Set<number>>(new Set());
 const selectedFromMaster = ref<Set<number>>(new Set());
 const newTodos = ref<string[]>([]);
 const newTodoTitle = ref('');
@@ -82,6 +84,14 @@ function toggleEarlier(id: number) {
     }
 }
 
+function toggleMissed(id: number) {
+    if (selectedMissed.value.has(id)) {
+        selectedMissed.value.delete(id);
+    } else {
+        selectedMissed.value.add(id);
+    }
+}
+
 function toggleMaster(id: number) {
     if (selectedFromMaster.value.has(id)) {
         selectedFromMaster.value.delete(id);
@@ -123,6 +133,7 @@ function startDay() {
         {
             carry_over_ids: carryOverIds,
             new_titles: newTodos.value,
+            missed_recurring_ids: [...selectedMissed.value],
         },
         {
             preserveScroll: true,
@@ -338,6 +349,65 @@ const previousLabel = computed(() => {
                         <span class="flex-1 text-sm">{{
                             todo.title
                         }}</span>
+                    </button>
+                </li>
+            </ul>
+        </section>
+
+        <section v-if="missedRecurring.length" class="pt-12">
+            <header class="mb-2 flex items-baseline gap-2">
+                <span
+                    class="font-mono text-[10px] tracking-widest text-muted-foreground uppercase"
+                >
+                    herhaald, gemist
+                </span>
+                <span class="font-mono text-[10px] text-muted-foreground/40"
+                    >({{ missedRecurring.length }})</span
+                >
+                <span
+                    class="ml-auto font-mono text-[10px] tracking-wide text-muted-foreground/60 lowercase"
+                    >inhalen op vandaag</span
+                >
+            </header>
+            <ul>
+                <li
+                    v-for="todo in missedRecurring"
+                    :key="`missed-${todo.id}`"
+                    class="border-b border-border/40"
+                >
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-3 py-2.5 text-left"
+                        @click="toggleMissed(todo.id)"
+                    >
+                        <span
+                            class="relative grid size-5 shrink-0 place-items-center rounded-full border transition-colors"
+                            :class="
+                                selectedMissed.has(todo.id)
+                                    ? 'border-accent bg-accent text-accent-foreground'
+                                    : 'border-input'
+                            "
+                        >
+                            <svg
+                                v-if="selectedMissed.has(todo.id)"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 16 16"
+                                fill="currentColor"
+                                class="size-3"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.131.094l-3-3a.75.75 0 1 1 1.06-1.06l2.37 2.37 4.453-6.678a.75.75 0 0 1 1.04-.266Z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                        </span>
+                        <span class="flex-1 text-sm">{{ todo.title }}</span>
+                        <span
+                            v-if="(todo.missed_count ?? 0) > 1"
+                            class="shrink-0 font-mono text-[10px] tracking-wide text-muted-foreground/60 lowercase"
+                            >{{ todo.missed_count }}× gemist</span
+                        >
                     </button>
                 </li>
             </ul>

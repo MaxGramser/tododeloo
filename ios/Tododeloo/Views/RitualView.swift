@@ -7,6 +7,7 @@ struct RitualView: View {
     @Bindable var model: BoardModel
 
     @State private var selected: Set<Int> = []
+    @State private var selectedMissed: Set<Int> = []
     @State private var newTitles: [String] = []
     @State private var draft = ""
     @State private var isStarting = false
@@ -24,6 +25,9 @@ struct RitualView: View {
                 }
                 if !model.earlierCandidates.isEmpty {
                     selectableSection(title: "Eerder", todos: model.earlierCandidates)
+                }
+                if !model.missedRecurring.isEmpty {
+                    missedRecurringSection
                 }
                 if !model.masterOpenTodos.isEmpty {
                     selectableSection(title: "Uit alles", todos: model.masterOpenTodos)
@@ -100,6 +104,38 @@ struct RitualView: View {
         }
     }
 
+    /// Missed recurrences, one row per recurrence. Checking a row catches up all
+    /// its outstanding days onto today.
+    private var missedRecurringSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            MonoLabel("Herhaald, gemist").padding(.bottom, 10)
+            ForEach(model.missedRecurring) { todo in
+                Button {
+                    toggleMissed(todo.id)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: selectedMissed.contains(todo.id) ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 20))
+                            .foregroundStyle(selectedMissed.contains(todo.id) ? Theme.accent : Theme.faint)
+                        Text(todo.title)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.leading)
+                        Spacer()
+                        if let count = todo.missedCount, count > 1 {
+                            Text("\(count)× gemist")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Theme.muted)
+                        }
+                    }
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     private var newSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             MonoLabel("Nieuw vandaag").padding(.bottom, 10)
@@ -158,6 +194,14 @@ struct RitualView: View {
         }
     }
 
+    private func toggleMissed(_ id: Int) {
+        if selectedMissed.contains(id) {
+            selectedMissed.remove(id)
+        } else {
+            selectedMissed.insert(id)
+        }
+    }
+
     private func addDraft() {
         let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -169,7 +213,7 @@ struct RitualView: View {
         addDraft()
         isStarting = true
         Task {
-            await model.startDay(carryOverIds: Array(selected), newTitles: newTitles)
+            await model.startDay(carryOverIds: Array(selected), newTitles: newTitles, missedRecurringIds: Array(selectedMissed))
             isStarting = false
         }
     }

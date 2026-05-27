@@ -44,6 +44,7 @@ final class BoardModel {
     var previousWorkday = ""
     var carryOverCandidates: [Todo] = []
     var earlierCandidates: [Todo] = []
+    var missedRecurring: [Todo] = []
     var masterOpenTodos: [Todo] = []
     var preScheduled: [Todo] = []
 
@@ -156,6 +157,7 @@ final class BoardModel {
                     previousWorkday = response.previousWorkday
                     carryOverCandidates = response.carryOverCandidates
                     earlierCandidates = response.earlierCandidates
+                    missedRecurring = response.missedRecurring ?? []
                     masterOpenTodos = response.masterOpenTodos
                     preScheduled = response.preScheduled
                     listId = response.list?.id
@@ -235,9 +237,9 @@ final class BoardModel {
 
     // MARK: - Morning ritual
 
-    func startDay(carryOverIds: [Int], newTitles: [String]) async {
+    func startDay(carryOverIds: [Int], newTitles: [String], missedRecurringIds: [Int] = []) async {
         do {
-            _ = try await api.startDay(dateString, carryOverIds: carryOverIds, newTitles: newTitles)
+            _ = try await api.startDay(dateString, carryOverIds: carryOverIds, newTitles: newTitles, missedRecurringIds: missedRecurringIds)
             await load()
         } catch {
             handle(error)
